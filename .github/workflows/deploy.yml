@@ -1,0 +1,29 @@
+name: نشر يومي إلى Netlify
+on:
+  push:
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+concurrency: { group: netlify-deploy, cancel-in-progress: true }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: التحقق من ملف الأخبار
+        run: python3 -c "import json;d=json.load(open('src/news.json'));assert d['date'] and d['markets'] and d['ai']['items'];print('news.json ok', d['date'])"
+      - name: البناء
+        run: python3 build.py && (cd public && zip -q -r -X ../deploy.zip .)
+      - name: النشر
+        env:
+          TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          SITE=$(cat .site_id)
+          ID=$(curl -sf -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip "https://api.netlify.com/api/v1/sites/$SITE/deploys" | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
+          for i in $(seq 1 30); do
+            STATE=$(curl -sf -H "Authorization: Bearer $TOKEN" "https://api.netlify.com/api/v1/sites/$SITE/deploys/$ID" | python3 -c "import sys,json;print(json.load(sys.stdin).get('state',''))")
+            [ "$STATE" = ready ] && { echo "✓ https://$(cat .site_name).netlify.app"; exit 0; }
+            [ "$STATE" = error ] && { echo "✗ فشل النشر"; exit 1; }
+            sleep 2
+          done
+          exit 1
