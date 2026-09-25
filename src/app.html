@@ -227,6 +227,16 @@ textarea{min-height:80px;resize:vertical}
 .weekplan .d.today{color:var(--accent)}
 .draft{background:var(--bg);border-radius:10px;padding:12px;font-size:14px;white-space:pre-wrap;display:flex;flex-direction:column;gap:8px}
 .draft h4{margin:0;font-size:13px;color:var(--accent)}
+.fast-note{display:flex;gap:12px;align-items:center;background:var(--gold-soft);border-radius:14px;padding:12px 14px}
+.fast-note .moon{flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--gold);color:#1b1406;display:grid;place-items:center}
+.fast-note .moon svg{width:20px;height:20px}
+.fast-note b{display:block;font-size:15px}
+.fast-note span{font-size:13px;color:var(--muted)}
+.fast-list{display:flex;flex-direction:column}
+.fast-row{display:flex;justify-content:space-between;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);font-size:14px}
+.fast-row:last-child{border-bottom:0}
+.fast-row .why{font-size:12.5px;font-weight:600;color:var(--gold)}
+.fast-row .when{color:var(--muted);font-size:13px;text-align:left}
 .toast{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom,0px));inset-inline:16px;max-width:420px;margin-inline:auto;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;text-align:center;z-index:9;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
 .toast.show{opacity:1;transform:none}
 .sync{font-size:11.5px;color:var(--faint);text-align:center}
@@ -248,6 +258,7 @@ textarea{min-height:80px;resize:vertical}
 
 <!-- اليوم -->
 <section class="pane" id="p-today" aria-label="جدول اليوم">
+  <div class="fast-note" id="fastNote" hidden><span class="moon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></span><div><b id="fastNoteT"></b><span id="fastNoteS"></span></div></div>
   <div class="card-head"><h2>جدول اليوم</h2><span class="label num" id="doneCount"></span></div>
   <div class="timeline" id="timeline"></div>
   <p class="sync" id="syncNote"></p>
@@ -286,6 +297,12 @@ textarea{min-height:80px;resize:vertical}
   <div class="card">
     <div class="card-head"><h2>الصلوات في المسجد</h2><span class="label num" id="prCount"></span></div>
     <div class="prayers" id="prayers"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div><div class="label">سنّة · الاثنين والخميس والأيام البيض</div><h2>الصيام</h2></div><button class="check" id="c-fast" aria-pressed="false" aria-label="صمت اليوم"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <p class="hint" id="fastToday" style="margin:0"></p>
+    <div class="fast-list" id="fastList"></div>
   </div>
 
   <div class="card">
@@ -490,6 +507,17 @@ function prayerTimes(date, lat, lng, tz=3){
   const isha = maghrib + (ramadan?2:1.5);
   return {fajr,sunrise,dhuhr,asr,maghrib,isha};
 }
+function hijriDM(d){ try{ const ps=new Intl.DateTimeFormat("en-u-ca-islamic-umalqura",{day:"numeric",month:"numeric"}).formatToParts(d); return {d:+ps.find(x=>x.type==="day").value, m:+ps.find(x=>x.type==="month").value} }catch{ return {d:0,m:0} } }
+/* أيام الصيام المسنونة: الاثنين والخميس والأيام البيض (١٣–١٥)، مع استثناء العيدين وأيام التشريق ورمضان */
+function fastInfo(date){
+  const {d,m}=hijriDM(date), wd=date.getDay();
+  if(m===9) return {ok:false, ramadan:true, why:[]};
+  if((m===10&&d===1)||(m===12&&d>=10&&d<=13)) return {ok:false, forbidden:true, why:[]};
+  const why=[]; if(wd===1) why.push("الاثنين"); if(wd===4) why.push("الخميس"); if(d>=13&&d<=15) why.push("الأيام البيض");
+  return {ok:why.length>0, why, hd:d};
+}
+const fastLabel=f=>f.why.includes("الأيام البيض")&&f.why.length>1?`${f.why[0]} والأيام البيض`:f.why.includes("الأيام البيض")?`الأيام البيض (${AR(f.hd)})`:`يوم ${f.why[0]}`;
+const addDays=(d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x };
 function hijriMonth(d){ try{ return +new Intl.DateTimeFormat("en-u-ca-islamic-umalqura",{month:"numeric"}).format(d) }catch{ return 0 } }
 const toMin = h => Math.round(h*60);
 const fmt = m => { m=((m%1440)+1440)%1440; let h=Math.floor(m/60), mm=m%60; const ap=h<12?"ص":"م"; h=h%12||12; return `${AR(h)}:${AR(pad(mm))} ${ap}` };
@@ -540,6 +568,11 @@ function schedule(){
     {t:m.maghrib+15, id:"english", ttl:"تمرين الإلقاء بالإنجليزية", sub:"دقيقتان أمام الكاميرا", done:day.english, go:"speak"},
     {t:m.isha, kind:"prayer", id:"p-isha", ttl:"صلاة العشاء", sub:"في المسجد", done:!!day.prayers.isha},
     {t:m.isha+30, id:"aiidea", ttl:"فكرة ذكاء اصطناعي للمجتمع", sub:"دوّن فكرة واحدة", done:day.aiidea, go:"habits"},
+    ...(()=>{ const out=[], f=fastInfo(new Date()), tm=fastInfo(addDays(new Date(),1));
+      if(f.ok){ out.push({t:m.fajr-40, id:"suhoor", ttl:"السحور", sub:"صيام "+fastLabel(f)+" · قبل الفجر بقليل", done:!!day.suhoor});
+        out.push({t:m.maghrib-1, id:"fast", ttl:"الإفطار: أتممت صيامي", sub:"«للصائم عند فطره دعوة ما تُرد»", done:!!day.fast}); }
+      if(tm.ok) out.push({t:m.isha+15, id:"fastTomorrow", ttl:"غداً صيام "+fastLabel(tm), sub:"انوِ الصيام واضبط منبّه السحور", done:!!day.fastReminded});
+      return out })(),
     {t:m.isha+45, id:"speaking", ttl:"تحدّي الجرأة", sub:"راجع هل نفّذته اليوم", done:day.speaking, go:"speak"},
   ].sort((a,b)=>a.t-b.t);
   return {items, p:m, us};
@@ -550,6 +583,9 @@ function toggle(id){
   else if(id==="mk-sa"){ day.markets.sa=!day.markets.sa }
   else if(id==="mk-us"){ const v=!(day.markets.us&&day.markets.crypto); day.markets.us=v; day.markets.crypto=v }
   else if(id==="brand"){ const v=brandCount()!==PLATFORMS.length; PLATFORMS.forEach(p=>day.brand[p.k]=v) }
+  else if(id==="suhoor"){ day.suhoor=!day.suhoor }
+  else if(id==="fast"){ day.fast=!day.fast }
+  else if(id==="fastTomorrow"){ day.fastReminded=!day.fastReminded }
   else if(id==="quran"){ day.quran = day.quran>=30?0:30; day.quranPage=day.quranPage||settings.quranPage }
   else day[id]=!day[id];
   saveDay();
@@ -720,6 +756,25 @@ $("tStart").onclick=()=>{
 };
 $("tReset").onclick=resetTimer;
 
+/* ---------- الصيام ---------- */
+function renderFast(){
+  const now=new Date(), f=fastInfo(now), tm=fastInfo(addDays(now,1));
+  const note=$("fastNote");
+  if(f.ok||tm.ok||f.ramadan){ note.hidden=false;
+    if(tm.ok&&!f.ok){ $("fastNoteT").textContent="غداً صيام "+fastLabel(tm); $("fastNoteS").textContent="انوِ الليلة، واضبط منبّه السحور قبل الفجر بـ٤٠ دقيقة." }
+    else if(f.ok){ $("fastNoteT").textContent="اليوم صيام "+fastLabel(f); $("fastNoteS").textContent=tm.ok?"وغداً أيضاً صيام "+fastLabel(tm)+".":"الإفطار مع أذان المغرب. تقبّل الله." }
+    else { $("fastNoteT").textContent="رمضان مبارك"; $("fastNoteS").textContent="صيام الفريضة. السحور قبل الفجر والإفطار مع المغرب." }
+  } else note.hidden=true;
+  $("c-fast").setAttribute("aria-pressed",!!day.fast);
+  $("fastToday").textContent=f.ok?"اليوم صيام "+fastLabel(f)+". سجّل عند الإفطار.":f.forbidden?"اليوم يحرم صيامه (عيد أو أيام التشريق).":f.ramadan?"شهر رمضان: صيام الفريضة.":tm.ok?"لا صيام اليوم، وغداً صيام "+fastLabel(tm)+".":"لا صيام اليوم. هذه أيامك القادمة:";
+  const box=$("fastList"); box.textContent=""; let n=0;
+  for(let i=1;i<=31&&n<6;i++){ const d=addDays(now,i), fi=fastInfo(d); if(!fi.ok) continue; n++;
+    const r=el("div","fast-row"), a=el("div"); a.append(el("div",null,new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-arab",{weekday:"long",day:"numeric",month:"long"}).format(d)), el("div","why",fi.why.join(" · ")));
+    const rem=i===1?"التذكير الليلة":"التذكير "+new Intl.DateTimeFormat("ar-SA-u-nu-arab",{weekday:"long"}).format(addDays(d,-1))+" بعد العشاء";
+    r.append(a, el("div","when",rem)); box.append(r) }
+}
+$("c-fast").onclick=()=>toggle("fast");
+
 /* ---------- الكاليسثنكس ---------- */
 const EX=[
   {id:"row", cat:"سحب", target:"٣ × ٨–١٢", levels:[
@@ -865,8 +920,8 @@ $("brDraft").onclick=async()=>{
 };
 
 /* ---------- التقدم ---------- */
-const HABITS=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["كاليسثنكس / مشي",d=>d.exercise?1:(d.sets&&Object.values(d.sets).some(Boolean))?.5:0],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking],["العلامة الشخصية",d=>{const n=Object.values(d.brand||{}).filter(Boolean).length;return n>=4?1:n?.5:0}]];
-function score(d){ if(!d) return 0; return HABITS.reduce((s,[,f])=>s+f(d),0)/HABITS.length }
+const HABITS=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["كاليسثنكس / مشي",d=>d.exercise?1:(d.sets&&Object.values(d.sets).some(Boolean))?.5:0],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking],["الصيام",d=>{ if(!d.date) return null; const [y,mo,da]=d.date.split("-").map(Number); return fastInfo(new Date(y,mo-1,da)).ok?(d.fast?1:0):null }],["العلامة الشخصية",d=>{const n=Object.values(d.brand||{}).filter(Boolean).length;return n>=4?1:n?.5:0}]];
+function score(d){ if(!d) return 0; const v=HABITS.map(([,f])=>f(d)).filter(x=>x!=null); return v.reduce((a,b)=>a+b,0)/v.length }
 function last7(){ const out=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); out.push([keyOf(d),d]) } return out }
 function renderProgress(){
   const days=last7(), wk=$("week"); wk.textContent="";
@@ -876,7 +931,7 @@ function renderProgress(){
     el.querySelectorAll("span")[0].textContent=names[d.getDay()]; el.querySelectorAll("span")[1].textContent=AR(Math.round(s*100))+"٪"; wk.append(el) });
   const g=$("habitGrid"); g.textContent="";
   HABITS.forEach(([n,f])=>{ const r=document.createElement("div"); r.className="hg-row"; const l=document.createElement("span"); l.textContent=n; r.append(l);
-    days.forEach(([k])=>{ const i=document.createElement("i"); const v=history[k]?f(history[k]):0; if(v===1)i.className="on"; else if(v)i.className="half"; r.append(i) }); g.append(r) });
+    days.forEach(([k])=>{ const i=document.createElement("i"); const v=history[k]?f(history[k]):0; if(v==null) i.style.opacity=".35"; if(v===1)i.className="on"; else if(v)i.className="half"; r.append(i) }); g.append(r) });
   let streak=0; for(let i=0;i<400;i++){ const d=new Date(); d.setDate(d.getDate()-i); const h=history[keyOf(d)]; if(h&&h.quran>=30) streak++; else if(i===0) continue; else break }
   $("stStreak").textContent=AR(streak);
   $("stMosque").textContent=AR(days.reduce((s,[k])=>s+(history[k]?PRAYERS.filter(([p])=>history[k].prayers&&history[k].prayers[p]).length:0),0));
@@ -894,6 +949,9 @@ function buildICS(){
     const p=prayerTimes(d,lat,lng), m=Object.fromEntries(Object.entries(p).map(([k,v])=>[k,toMin(v)])), wd=d.getDay();
     const ev=[[m.fajr-15,"الفجر في المسجد",15],[m.fajr+25,"الورد: وجه اليوم × ٣٠",30],[m.sunrise+20,(settings.trainDays||[]).includes(wd)?"كاليسثنكس: الجسم كاملاً":"مشي ومرونة",35],[m.dhuhr-10,"الظهر في المسجد",15],[m.dhuhr+20,"جديد الذكاء الاصطناعي",10],[m.asr-10,"العصر في المسجد",15],[m.asr+20,"صفحة من كتاب",10],[m.maghrib-10,"المغرب في المسجد",15],[m.maghrib+15,"تمرين الإلقاء بالإنجليزية",10],[m.maghrib+35,"العلامة الشخصية: تفاعل ونشر",20],[m.isha-10,"العشاء في المسجد",15],[m.isha+30,"فكرة ذكاء اصطناعي للمجتمع + تحدي الجرأة",10]];
     if(wd<=4) ev.push([9*60+45,"السوق السعودي قبل الافتتاح",10]);
+    const fT=fastInfo(addDays(d,1)), fD=fastInfo(d);
+    if(fT.ok) ev.push([m.isha+15,"غداً صيام "+fastLabel(fT)+": انوِ واضبط منبه السحور",10]);
+    if(fD.ok) ev.push([m.fajr-40,"السحور: صيام "+fastLabel(fD),20]);
     if(wd>=1&&wd<=5) ev.push([usOpenKSA(d),"افتتاح السوق الأمريكي + الكريبتو",10]);
     ev.forEach(([t,title,dur],j)=>{ L.push("BEGIN:VEVENT",`UID:yawmi-${keyOf(d)}-${j}@yawmi`,`DTSTAMP:${stamp}`,`DTSTART:${at(d,t)}`,`DTEND:${at(d,t+dur)}`,`SUMMARY:${title}`,"BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${title}`,"TRIGGER:PT0M","END:VALARM","END:VEVENT") });
   }
@@ -925,7 +983,7 @@ function showTab(t){
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
 function render(){
-  renderTimeline(); renderQuran(); renderPrayers(); renderNews(); renderChecks(); renderSpeak(); renderTrain(); renderBrand(); renderProgress();
+  renderTimeline(); renderQuran(); renderPrayers(); renderNews(); renderChecks(); renderSpeak(); renderTrain(); renderBrand(); renderFast(); renderProgress();
 }
 function fillInputs(){
   $("bookTitle").value=settings.bookTitle||""; $("bookPage").value=settings.bookPage||1;
