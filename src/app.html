@@ -53,8 +53,8 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 
 /* tabs */
 nav.tabs{position:fixed;bottom:0;inset-inline:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-nav.tabs .in{max-width:560px;margin-inline:auto;display:grid;grid-template-columns:repeat(5,1fr)}
-nav.tabs button{background:none;border:0;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--faint);font-weight:500}
+nav.tabs .in{max-width:560px;margin-inline:auto;display:grid;grid-template-columns:repeat(6,1fr)}
+nav.tabs button{background:none;border:0;padding:10px 2px 12px;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--faint);font-weight:500}
 nav.tabs button svg{width:22px;height:22px}
 nav.tabs button[aria-selected="true"]{color:var(--accent);font-weight:700}
 
@@ -190,6 +190,43 @@ textarea{min-height:80px;resize:vertical}
 .ai-item:last-of-type{border-bottom:0}
 .ai-item b{font-size:12px;color:var(--accent);font-weight:700}
 .ai-item span{font-size:14.5px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--bg);border-radius:20px;padding:4px 11px;font-size:13px;font-weight:600;color:var(--muted)}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.exs{display:flex;flex-direction:column}
+.ex{display:flex;flex-direction:column;gap:6px;padding-block:12px;border-bottom:1px solid var(--line)}
+.ex:last-child{border-bottom:0}
+.ex-top{display:flex;align-items:flex-start;gap:10px}
+.ex-top .txt{flex:1;min-width:0}
+.ex-cat{font-size:11.5px;color:var(--accent);font-weight:700}
+.ex-name{font-weight:700;font-size:15.5px}
+.ex-how{font-size:13px;color:var(--muted)}
+.ex-target{flex-shrink:0;font-size:13px;font-weight:700;background:var(--sunk);border-radius:8px;padding:3px 8px}
+.ex-bot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sets{display:flex;gap:6px}
+.sets button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:13px;font-weight:700;color:var(--muted);padding:0}
+.sets button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.lv-row{display:flex;gap:6px;margin-inline-start:auto;align-items:center}
+.lv-row span{font-size:12px;color:var(--faint)}
+.lv-row button{border:1px solid var(--line);background:none;border-radius:8px;padding:3px 9px;font-size:12.5px;font-weight:600;color:var(--accent)}
+.lv-row button[disabled]{opacity:.35;cursor:default}
+.rest{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));align-self:center;background:var(--ink);color:var(--bg);border-radius:30px;padding:8px 16px;font-size:14px;font-weight:600;display:flex;gap:12px;align-items:center;z-index:4;box-shadow:var(--shadow)}
+.rest button{background:none;border:0;color:inherit;opacity:.7;font-size:13px;padding:0}
+.plain{margin:0;padding-inline-start:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.plain b{font-weight:700}
+.plat{display:flex;flex-direction:column;gap:4px;padding-block:10px;border-bottom:1px solid var(--line)}
+.plat:last-child{border-bottom:0}
+.plat-top{display:flex;align-items:center;gap:10px}
+.plat-top .txt{flex:1;min-width:0}
+.plat-name{font-weight:700;font-size:15px;display:flex;gap:8px;align-items:center}
+.plat-name a{font-size:12px;font-weight:600;color:var(--accent);text-decoration:none}
+.post-today{font-size:13px;background:var(--gold-soft);border-radius:8px;padding:4px 10px;align-self:flex-start}
+.post-today b{color:var(--gold)}
+.weekplan{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13.5px}
+.weekplan .d{font-weight:700;color:var(--muted)}
+.weekplan .d.today{color:var(--accent)}
+.draft{background:var(--bg);border-radius:10px;padding:12px;font-size:14px;white-space:pre-wrap;display:flex;flex-direction:column;gap:8px}
+.draft h4{margin:0;font-size:13px;color:var(--accent)}
 .toast{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom,0px));inset-inline:16px;max-width:420px;margin-inline:auto;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;text-align:center;z-index:9;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
 .toast.show{opacity:1;transform:none}
 .sync{font-size:11.5px;color:var(--faint);text-align:center}
@@ -259,16 +296,44 @@ textarea{min-height:80px;resize:vertical}
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-head"><h2>تمرين خفيف أو مشي</h2><button class="check" id="c-exercise" aria-pressed="false" aria-label="تم التمرين"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-    <p class="hint" style="margin:0">٢٠ دقيقة مشي بعد الشروق، أو ١٠ دقائق تمارين وزن الجسم: ضغط، قرفصاء، بلانك.</p>
-  </div>
 
   <div class="card">
     <div class="card-head"><h2>فكرة ذكاء اصطناعي تنفع المجتمع</h2><button class="check" id="c-aiidea" aria-pressed="false" aria-label="دوّنت فكرة اليوم"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
     <div class="ideas" id="ideas"></div>
     <div class="row"><button class="btn" id="genIdeas" hidden>اقترح عليّ ٣ أفكار</button></div>
     <div class="field"><label for="ideaText">فكرتي اليوم</label><textarea id="ideaText" placeholder="مثال: مساعد صوتي يقرأ الوصفات الطبية لكبار السن بلهجتهم"></textarea></div>
+  </div>
+</section>
+
+<!-- التمرين -->
+<section class="pane" id="p-train" aria-label="تمرين الكاليسثنكس" hidden>
+  <div class="card">
+    <div class="card-head"><div><div class="label" id="trDayLabel"></div><h2 id="trTitle">كاليسثنكس</h2></div><button class="check" id="c-exercise" aria-pressed="false" aria-label="أنهيت تمرين اليوم"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    <p class="hint" id="trSub" style="margin:0"></p>
+    <div class="field"><label>أيام التمرين (٣ أيام بينها راحة)</label><div class="chips" id="trDays"></div></div>
+  </div>
+  <div class="card" id="trWarm"></div>
+  <div class="card" id="trMain"><div class="card-head"><h2>التمارين</h2><span class="label num" id="trCount"></span></div><div class="exs" id="exList"></div></div>
+  <div class="rest num" id="restBar" hidden><span id="restTxt">راحة ١:٣٠</span><button id="restSkip">تخطَّ</button></div>
+  <div class="card" id="trCool"></div>
+  <div class="card">
+    <h2>قاعدة التدرّج</h2>
+    <p class="hint" style="margin:0">إذا أكملت ٣ مجموعات بأعلى عدد في النطاق (مثلاً ٣ × ١٢) بأداء نظيف، انتقل للمستوى التالي بزر «أتقنتها». في المستوى الجديد ابدأ من أقل النطاق (٣ × ٨) واصعد تدريجياً. هكذا تتطور دون أوزان.</p>
+  </div>
+  <div class="card">
+    <h2>أهم النصائح للمبتدئين</h2>
+    <ol class="plain">
+      <li><b>الأداء قبل العدد.</b> ٨ تكرارات نظيفة أفضل من ١٥ تكراراً مهزوزاً. صوّر نفسك من الجانب وقارن.</li>
+      <li><b>٣ أيام في الأسبوع تكفي.</b> العضلة تنمو في يوم الراحة، والجسم كله يتمرن في كل حصة.</li>
+      <li><b>لا تصل للفشل في كل مجموعة.</b> اترك تكراراً أو اثنين في المخزون، خصوصاً في الأسابيع الأولى.</li>
+      <li><b>أحمِ الرسغين والكتفين.</b> الإحماء ٥ دقائق ليس اختيارياً، فالضغط والغطس يحمّلان المفاصل.</li>
+      <li><b>ألم العضلات طبيعي، وألم المفصل لا.</b> تيبّس اليومين الأولين متوقع. أما الألم الحاد في الكوع أو الكتف فانزل مستوى.</li>
+      <li><b>البروتين والنوم نصف التمرين.</b> نحو ١٫٦ غرام بروتين لكل كيلو من وزنك يومياً، و٧–٨ ساعات نوم.</li>
+      <li><b>الراحة بين المجموعات ٦٠–٩٠ ثانية.</b> المؤقت يبدأ تلقائياً عندما تسجّل مجموعة.</li>
+      <li><b>سجّل أرقامك.</b> ما لا يُقاس لا يتحسّن، ولهذا تحفظ الصفحة مستواك في كل تمرين.</li>
+      <li><b>الاستمرار يغلب الحماس.</b> ٢٠ دقيقة تنفّذها أفضل من ساعة تؤجّلها. لا تكسر السلسلة يومين متتاليين.</li>
+      <li><b>الأدوات:</b> طاولة متينة وكرسيّان تكفي للبداية. بار عقلة على الباب (نحو ٦٠–١٠٠ ريال) يفتح لك تمارين السحب، والحلقات لاحقاً.</li>
+    </ol>
   </div>
 </section>
 
@@ -282,7 +347,7 @@ textarea{min-height:80px;resize:vertical}
 </section>
 
 <!-- الإلقاء -->
-<section class="pane" id="p-speak" aria-label="الإلقاء والإنجليزية" hidden>
+<section class="pane" id="p-speak" aria-label="الحضور: الإلقاء والإنجليزية والعلامة الشخصية" hidden>
   <div class="card">
     <div class="card-head"><h2>تحدّث دقيقتين بالإنجليزية</h2><button class="check" id="c-english" aria-pressed="false" aria-label="أنهيت التمرين"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
     <p class="prompt en" id="enPrompt"></p>
@@ -311,6 +376,37 @@ textarea{min-height:80px;resize:vertical}
       <li>الصمت لثانيتين أفضل من «امم». توقّف بدل الحشو.</li>
       <li>تذكّر: الناس مشغولون بأنفسهم أكثر مما تظن.</li>
     </ul>
+  </div>
+  <div class="card">
+    <div class="card-head"><div><div class="label">عادة يومية · ٣٠ دقيقة</div><h2>العلامة الشخصية</h2></div><span class="label num" id="brCount"></span></div>
+    <div class="field"><label for="brPillars">محاورك (ركّز عليها ٩٠ يوماً)</label><input type="text" id="brPillars"></div>
+    <div id="platforms"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>فكرة محتوى اليوم</h2><button class="btn ghost" id="brNext" style="padding:4px 10px;font-size:13px">فكرة أخرى</button></div>
+    <p class="prompt" id="brIdea" style="font-size:16.5px;margin:0"></p>
+    <p class="hint" style="margin:0">فكرة واحدة تصلح لأربع منصات: منشور لينكدإن، وتغريدة أو ثريد على إكس، ومقطع قصير لتيك توك تعيد نشره على YouTube Shorts.</p>
+    <div class="row"><button class="btn primary" id="brDraft" hidden>اكتب لي المسودات</button></div>
+    <div class="draft" id="brDraftOut" hidden></div>
+  </div>
+  <div class="card">
+    <h2>خطة النشر الأسبوعية</h2>
+    <div class="weekplan" id="weekplan"></div>
+  </div>
+  <div class="card">
+    <h2>مبادئ بناء العلامة الشخصية</h2>
+    <ol class="plain">
+      <li><b>وثّق رحلتك بدل أن تتظاهر بالخبرة.</b> «اليوم ٤٠ من حفظ القرآن» و«من ضغط الركبتين إلى الضغط الكامل» محتوى صادق يجذب الناس.</li>
+      <li><b>تفاعل قبل أن تنشر.</b> ١٥ دقيقة تعليقات مفيدة على حسابات في مجالك تجلب زواراً لملفك أكثر من منشورك نفسه.</li>
+      <li><b>التعليق الجيد يضيف شيئاً:</b> تجربة، أو رقماً، أو سؤالاً ذكياً. «مبدع 👏» لا يبني شيئاً.</li>
+      <li><b>السطر الأول والثواني الثلاث الأولى تقرّر كل شيء.</b> ابدأ بنتيجة أو سؤال أو رقم، لا بمقدمة.</li>
+      <li><b>فكرة واحدة لأربع منصات.</b> اكتب المنشور ثم اختصره تغريدة، وصوّره مقطعاً، وانشر المقطع على Shorts.</li>
+      <li><b>الملف التعريفي واجهتك.</b> صورة واضحة، وسطر يقول من أنت ولمن تفيد. اجعله موحّداً في المنصات الأربع.</li>
+      <li><b>منشور إنجليزي أسبوعياً على لينكدإن.</b> يوسّع جمهورك ويدرّب لغتك في الوقت نفسه.</li>
+      <li><b>مقاطعك تمرين للإلقاء.</b> كل مقطع تنشره خطوة في سلّم الجرأة وتدريب أمام الجمهور.</li>
+      <li><b>قِس أسبوعياً لا يومياً.</b> زيارات الملف والمتابعون الجدد كل خميس. الأرقام اليومية تشتّت.</li>
+      <li><b>في الأسواق شارك ما تتعلمه، لا توصيات.</b> رأيك وتحليلك نعم، و«اشترِ هذا السهم» لا.</li>
+    </ol>
   </div>
 </section>
 
@@ -346,8 +442,9 @@ textarea{min-height:80px;resize:vertical}
 <nav class="tabs" aria-label="الأقسام"><div class="in" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>اليوم</button>
   <button role="tab" data-tab="habits" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 8-.5v13c-2.5-1-5.5-1-8 .5-2.5-1.5-5.5-1.5-8-.5z"/><path d="M12 6v13.5"/></svg>العادات</button>
+  <button role="tab" data-tab="train" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 8v8M17.5 8v8M3.5 10v4M20.5 10v4M6.5 12h11"/></svg>التمرين</button>
   <button role="tab" data-tab="news" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7.5 9h9M7.5 12.5h9M7.5 16h5"/></svg>الجديد</button>
-  <button role="tab" data-tab="speak" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M6 11.5a6 6 0 0 0 12 0M12 17.5v3"/></svg>الإلقاء</button>
+  <button role="tab" data-tab="speak" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M6 11.5a6 6 0 0 0 12 0M12 17.5v3"/></svg>الحضور</button>
   <button role="tab" data-tab="progress" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></svg>التقدم</button>
 </div></nav>
 
@@ -405,8 +502,8 @@ function usOpenKSA(d){
 
 /* ---------- الحالة ---------- */
 const PRAYERS = [["fajr","الفجر"],["dhuhr","الظهر"],["asr","العصر"],["maghrib","المغرب"],["isha","العشاء"]];
-const blankDay = () => ({date:TODAY, quran:0, quranPage:null, prayers:{}, book:false, exercise:false, markets:{}, ainews:false, aiidea:false, idea:"", english:false, speaking:false});
-let settings = {city:"riyadh", name:"", quranPage:1, bookTitle:"", bookPage:1, ladder:1, enIdx:0};
+const blankDay = () => ({date:TODAY, quran:0, quranPage:null, prayers:{}, book:false, exercise:false, sets:{}, brand:{}, markets:{}, ainews:false, aiidea:false, idea:"", english:false, speaking:false});
+let settings = {city:"riyadh", name:"", quranPage:1, bookTitle:"", bookPage:1, ladder:1, enIdx:0, trainDays:[0,2,4], lv:{}, brandPillars:"الذكاء الاصطناعي للمجتمع · الأسواق والاستثمار · العادات والإنتاجية · الإلقاء", brIdx:0};
 let day = blankDay();
 let history = {}; // date -> day
 let db = null;
@@ -431,7 +528,8 @@ function schedule(){
   const items = [
     {t:m.fajr, kind:"prayer", id:"p-fajr", ttl:"صلاة الفجر", sub:"في المسجد", done:!!day.prayers.fajr},
     {t:m.fajr+25, id:"quran", ttl:`الورد: الوجه ${AR(qp)} × ٣٠`, sub:"أصفى وقت للحفظ بعد الفجر", done:day.quran>=30, go:"habits", progress:`${AR(day.quran)}/٣٠`},
-    {t:m.sunrise+20, id:"exercise", ttl:"مشي أو تمرين خفيف", sub:"٢٠ دقيقة", done:day.exercise},
+    {t:m.sunrise+20, id:"exercise", ttl:isTrainDay()?"كاليسثنكس: الجسم كاملاً":"مشي ومرونة", sub:isTrainDay()?"٦ تمارين · نحو ٣٥ دقيقة":"٢٠ دقيقة مشي + ١٠ دقائق مرونة", done:day.exercise, go:"train", progress:isTrainDay()?`${AR(setsDone())}/${AR(EX.length*3)}`:null},
+    {t:m.maghrib+35, id:"brand", ttl:"العلامة الشخصية", sub:brandSub(), done:brandCount()===PLATFORMS.length, go:"speak", progress:`${AR(brandCount())}/${AR(PLATFORMS.length)}`},
     {t:9*60+45, id:"mk-sa", ttl:"السوق السعودي", sub:"قبل الافتتاح ١٠:٠٠ ص", done:!!day.markets.sa, go:"news"},
     {t:m.dhuhr, kind:"prayer", id:"p-dhuhr", ttl:"صلاة الظهر", sub:"في المسجد", done:!!day.prayers.dhuhr},
     {t:m.dhuhr+20, id:"ainews", ttl:"جديد الذكاء الاصطناعي", sub:"ملخص مكتوب في دقيقتين", done:day.ainews, go:"news"},
@@ -451,6 +549,7 @@ function toggle(id){
   if(id.startsWith("p-")){ const k=id.slice(2); day.prayers[k]=!day.prayers[k] }
   else if(id==="mk-sa"){ day.markets.sa=!day.markets.sa }
   else if(id==="mk-us"){ const v=!(day.markets.us&&day.markets.crypto); day.markets.us=v; day.markets.crypto=v }
+  else if(id==="brand"){ const v=brandCount()!==PLATFORMS.length; PLATFORMS.forEach(p=>day.brand[p.k]=v) }
   else if(id==="quran"){ day.quran = day.quran>=30?0:30; day.quranPage=day.quranPage||settings.quranPage }
   else day[id]=!day[id];
   saveDay();
@@ -568,7 +667,7 @@ function renderNews(){
   if(NEWS.ai.forYou){ const w=el("div","watch"); w.append(el("b",null,"فكرة لك: "), document.createTextNode(NEWS.ai.forYou)); ai.append(w) }
   ai.append(sourcesBox(NEWS.ai.sources));
 }
-fetch("news.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{ if(j){ NEWS=j; renderNews() } }).catch(()=>{ $("marketsNews").textContent="تعذّر تحميل الملخص. تحقق من الاتصال." });
+fetch("news.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{ if(j){ NEWS=j; renderNews(); try{renderBrand()}catch{} } }).catch(()=>{ $("marketsNews").textContent="تعذّر تحميل الملخص. تحقق من الاتصال." });
 
 /* ---------- عادات بسيطة ---------- */
 ["book","exercise","ainews","aiidea","english","speaking"].forEach(k=>{ $("c-"+k).onclick=()=>toggle(k) });
@@ -621,8 +720,152 @@ $("tStart").onclick=()=>{
 };
 $("tReset").onclick=resetTimer;
 
+/* ---------- الكاليسثنكس ---------- */
+const EX=[
+  {id:"row", cat:"سحب", target:"٣ × ٨–١٢", levels:[
+    ["سحب مائل عالٍ","امسك حافة طاولة متينة وجسمك مائل للخلف ٤٥°، ثم اسحب صدرك نحوها واعصر لوحي الكتف."],
+    ["سحب أسترالي","تحت طاولة متينة أو بار منخفض، الجسم مستقيم كاللوح والكعبان على الأرض."],
+    ["سحب أسترالي بقدمين مرفوعتين","ضع قدميك على كرسي، فيصير جسمك أفقياً والسحب أصعب."],
+    ["عقلة سلبية","اقفز حتى يتجاوز ذقنك البار ثم انزل ببطء خلال ٥ ثوانٍ."],
+    ["عقلة كاملة","من تعلّق كامل بذراعين ممدودتين حتى يتجاوز الذقن البار، بلا أرجحة."]]},
+  {id:"squat", cat:"أرجل", target:"٣ × ١٠–١٥", levels:[
+    ["قرفصاء إلى كرسي","انزل حتى تلمس الكرسي ثم قم دون أن تدفع بيديك. الركبتان باتجاه أصابع القدم."],
+    ["قرفصاء كاملة","انزل حتى يصير الورك تحت مستوى الركبة، والكعبان ثابتان والصدر مرفوع."],
+    ["اندفاع خلفي","خطوة للخلف ونزول حتى تقارب الركبة الخلفية الأرض، بالتناوب بين الرجلين."],
+    ["قرفصاء بلغارية","القدم الخلفية على كرسي، والنزول كله على الرجل الأمامية."],
+    ["قرفصاء المسدّس بمساعدة","على رجل واحدة ممسكاً بإطار الباب، والرجل الأخرى ممدودة للأمام."]]},
+  {id:"push", cat:"دفع", target:"٣ × ٨–١٢", levels:[
+    ["ضغط على الجدار","اليدان على الجدار بعرض الكتفين، والجسم مستقيم من الرأس للكعب."],
+    ["ضغط مائل على طاولة","كلما انخفض السطح صعبت الحركة. انزل حتى يلامس صدرك الحافة."],
+    ["ضغط على الركبتين","خط مستقيم من الركبة إلى الرأس، والمرفقان بزاوية ٤٥° عن الجسم."],
+    ["ضغط كامل","البطن والأرداف مشدودة، وانزل حتى يقارب صدرك الأرض."],
+    ["ضغط الماسة","اليدان متقاربتان تحت الصدر، فيتحمّل الترايسبس الجهد الأكبر."]]},
+  {id:"hinge", cat:"أرداف", target:"٣ × ١٢–١٥", levels:[
+    ["جسر الأرداف","استلقِ وقدماك على الأرض، ارفع الورك واعصر الأرداف ثانيتين في الأعلى."],
+    ["جسر برجل واحدة","الرجل الأخرى مرفوعة، والورك مستوٍ لا يميل."],
+    ["جسر بقدم واحدة على كرسي","مدى حركة أكبر وحمل أعلى على الأرداف وخلفية الفخذ."]]},
+  {id:"dip", cat:"دفع", target:"٣ × ٨–١٢", levels:[
+    ["غطس على كرسي بركبتين مثنيتين","اليدان على حافة كرسي ثابت خلفك، وانزل حتى زاوية ٩٠° في المرفق."],
+    ["غطس على كرسي بأرجل ممدودة","الكعبان بعيدان على الأرض، فيزيد الحمل على الذراعين."],
+    ["غطس بين كرسيين","لا تنزل أعمق من أن يكون الكتف بمستوى المرفق."],
+    ["غطس على المتوازي","جسمك مائل قليلاً للأمام، والكتفان بعيدان عن الأذنين."]]},
+  {id:"core", cat:"جذع", target:"٣ × ٢٠–٤٥ ث", levels:[
+    ["بلانك على الركبتين","الساعدان على الأرض، والبطن مشدود كأنك تنتظر لكمة."],
+    ["بلانك كامل","خط مستقيم من الرأس للكعب، واعصر الأرداف ولا تُسقط الورك."],
+    ["دِد بَغ","على ظهرك، مدّ اليد والرجل المتعاكستين ببطء وأسفل الظهر ملتصق بالأرض."],
+    ["هولو بودي","ظهرك على الأرض، ارفع الكتفين والرجلين قليلاً وثبّت الجسم كالقارب."],
+    ["رفع الركبتين معلّقاً","من التعلّق على البار، ارفع الركبتين للصدر دون أرجحة."]]}
+];
+const WARM=["قفز خفيف أو جمبنغ جاك · دقيقة","دوائر الذراعين والكتفين · ٣٠ ثانية","تحريك الرسغين في كل الاتجاهات · ٣٠ ثانية","أرجحة الرجلين · ١٠ لكل رجل","قطة وجمل للظهر · ١٠ مرات"];
+const COOL=["تمديد الصدر على إطار الباب · ٣٠ ثانية","تمديد خلفية الفخذ · ٣٠ ثانية لكل رجل","تمديد الورك (اندفاع ثابت) · ٣٠ ثانية لكل جهة","وضعية الطفل للظهر · ٤٥ ثانية"];
+const REST_DAY=["مشي ٢٠–٣٠ دقيقة بخطى سريعة","قرفصاء عميقة ثابتة · دقيقة","تمديد الصدر والكتفين · ٣٠ ثانية","تمديد خلفية الفخذ · ٣٠ ثانية لكل رجل","تعلّق حر من البار أو إطار الباب · ٣ × ٢٠ ثانية"];
+const WD=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const isTrainDay=()=>(settings.trainDays||[]).includes(new Date().getDay());
+const setsDone=()=>EX.reduce((s,e)=>s+Math.min(3,(day.sets||{})[e.id]||0),0);
+const lvOf=id=>Math.min((settings.lv||{})[id]||0, EX.find(e=>e.id===id).levels.length-1);
+let restInt=null;
+function startRest(sec=90){
+  clearInterval(restInt); let left=sec; const bar=$("restBar"); bar.hidden=false;
+  const show=()=>$("restTxt").textContent=`راحة ${AR(Math.floor(left/60))}:${AR(pad(left%60))}`; show();
+  restInt=setInterval(()=>{ left--; show(); if(left<=0){ clearInterval(restInt); bar.hidden=true; try{navigator.vibrate&&navigator.vibrate([60,40,60])}catch{} toast("انتهت الراحة. المجموعة التالية") } },1000);
+}
+$("restSkip").onclick=()=>{ clearInterval(restInt); $("restBar").hidden=true };
+function listCard(box,title,items){ box.textContent=""; box.append(el("h2",null,title)); const ul=el("ul","plain"); items.forEach(t=>ul.append(el("li",null,t))); box.append(ul) }
+function renderTrain(){
+  const train=isTrainDay(), wd=new Date().getDay();
+  $("trDayLabel").textContent=WD[wd]+" · "+(train?"يوم تمرين":"يوم راحة نشطة");
+  $("trTitle").textContent=train?"كاليسثنكس: الجسم كاملاً":"مشي ومرونة";
+  $("trSub").textContent=train?"إحماء ٥ دقائق، ثم ٦ تمارين × ٣ مجموعات، ثم تمديد ٥ دقائق. سجّل كل مجموعة عند إنهائها.":"العضلات تنمو في يوم الراحة. امشِ وحرّك المفاصل، وسجّل عند الانتهاء.";
+  const chips=$("trDays"); chips.textContent="";
+  WD.forEach((n,i)=>{ const b=el("button",null,n); b.setAttribute("aria-pressed",settings.trainDays.includes(i));
+    b.onclick=()=>{ const s=new Set(settings.trainDays); s.has(i)?s.delete(i):s.add(i); settings.trainDays=[...s].sort(); saveSettings(); render() }; chips.append(b) });
+  $("trMain").hidden=!train; $("trCool").hidden=!train;
+  if(train){ listCard($("trWarm"),"الإحماء · ٥ دقائق",WARM); listCard($("trCool"),"التمديد · ٥ دقائق",COOL) }
+  else listCard($("trWarm"),"روتين اليوم",REST_DAY);
+  const list=$("exList"); list.textContent="";
+  EX.forEach(e=>{
+    const lv=lvOf(e.id), [nm,how]=e.levels[lv], done=(day.sets||{})[e.id]||0;
+    const row=el("div","ex");
+    const top=el("div","ex-top"), txt=el("div","txt");
+    txt.append(el("div","ex-cat",`${e.cat} · المستوى ${AR(lv+1)} من ${AR(e.levels.length)}`), el("div","ex-name",nm), el("div","ex-how",how));
+    top.append(txt, el("span","ex-target num",e.target)); row.append(top);
+    const bot=el("div","ex-bot"), sets=el("div","sets");
+    [1,2,3].forEach(n=>{ const b=el("button","num",AR(n)); b.setAttribute("aria-pressed",done>=n); b.setAttribute("aria-label",`المجموعة ${n}`);
+      b.onclick=()=>{ day.sets=day.sets||{}; const nv=done>=n?n-1:n; day.sets[e.id]=nv;
+        if(nv>done && nv<3) startRest(90);
+        if(setsDone()===EX.length*3 && !day.exercise){ day.exercise=true; toast("أنهيت تمرين اليوم. أحسنت") }
+        saveDay() }; sets.append(b) });
+    const lvr=el("div","lv-row"), dn=el("button",null,"أسهل"), up=el("button",null,"أتقنتها ←");
+    dn.disabled=lv===0; up.disabled=lv===e.levels.length-1;
+    dn.onclick=()=>{ settings.lv[e.id]=lv-1; saveSettings(); renderTrain() };
+    up.onclick=()=>{ settings.lv[e.id]=lv+1; saveSettings(); toast(`المستوى الجديد: ${e.levels[lv+1][0]}`); renderTrain() };
+    lvr.append(dn,up); bot.append(sets,lvr); row.append(bot); list.append(row);
+  });
+  $("trCount").textContent=`${AR(setsDone())} من ${AR(EX.length*3)} مجموعة`;
+}
+
+/* ---------- العلامة الشخصية ---------- */
+const PLATFORMS=[
+  {k:"li", n:"لينكدإن", url:"https://www.linkedin.com/feed/", daily:"٥ تعليقات مفيدة على منشورات في مجالك، وقبول طلبات التواصل المناسبة.",
+    post:{0:"منشور: درس تعلّمته هذا الأسبوع", 3:"منشور بالإنجليزية: فكرة ذكاء اصطناعي تنفع المجتمع"}},
+  {k:"x", n:"إكس", url:"https://x.com/home", daily:"٣ ردود قيّمة على حسابات أكبر منك، وتغريدة واحدة من أفكارك.",
+    post:{4:"ثريد الخميس: خلاصة أسبوع الأسواق والذكاء الاصطناعي"}},
+  {k:"tt", n:"تيك توك", url:"https://www.tiktok.com", daily:"١٠ دقائق تفاعل مع صنّاع محتوى في مجالك: تعليق وسؤال.",
+    post:{1:"مقطع ٣٠–٦٠ ثانية: خبر ذكاء اصطناعي بأسلوبك", 4:"مقطع: يوم من رحلتك (حفظ، كاليسثنكس، إلقاء)"}},
+  {k:"yt", n:"يوتيوب", url:"https://studio.youtube.com", daily:"الرد على كل التعليقات، ومشاهدة فيديو واحد لصانع محتوى تتعلّم منه.",
+    post:{6:"فيديو الأسبوع ٥–١٠ دقائق، أو إعادة نشر مقاطع تيك توك كـShorts"}}
+];
+const brandCount=()=>PLATFORMS.filter(p=>(day.brand||{})[p.k]).length;
+function brandSub(){ const wd=new Date().getDay(); const posts=PLATFORMS.filter(p=>p.post[wd]).map(p=>p.n); return posts.length?`تفاعل ١٥ دقيقة + نشر على ${posts.join(" و")}`:"تفاعل ١٥ دقيقة على المنصات الأربع" }
+function contentIdeas(){
+  const out=[], qp=settings.quranPage;
+  if(NEWS&&NEWS.ai&&NEWS.ai.items[0]) out.push(`خبر اليوم برأيك: «${NEWS.ai.items[0][1].split("،")[0]}». ماذا يعني هذا للناس هنا؟`);
+  if(day.idea) out.push(`اعرض فكرتك: ${day.idea}. واسأل متابعيك: هل يستخدمونها؟`);
+  out.push(`وصلت الوجه ${AR(qp)} في رحلة الحفظ. شارك أسلوبك في التكرار ٣٠ مرة وما الذي يثبّتك.`);
+  const e=EX[dayIndex()%EX.length]; out.push(`من «${e.levels[0][0]}» إلى «${e.levels[e.levels.length-1][0]}»: صوّر مجموعة من مستواك الحالي «${e.levels[lvOf(e.id)][0]}» ووثّق التقدّم.`);
+  if(settings.bookTitle) out.push(`أهم فكرة قرأتها اليوم في «${settings.bookTitle}» وكيف ستطبّقها.`);
+  if(NEWS&&NEWS.markets&&NEWS.markets[0]) out.push(`السوق في جملة: ${NEWS.markets[0].headline}. شارك ما تتعلمه، دون توصيات.`);
+  out.push(`انشر مقطع الدقيقتين بالإنجليزية عن: «${TOPICS[(dayIndex()+(settings.enIdx||0))%TOPICS.length]}».`);
+  out.push("ما الخطأ الذي كنت أرتكبه في إدارة وقتي، وكيف رتّبت يومي حول الصلوات؟");
+  return out;
+}
+function renderBrand(){
+  const wd=new Date().getDay(), box=$("platforms"); box.textContent="";
+  PLATFORMS.forEach(p=>{
+    const r=el("div","plat"), top=el("div","plat-top"), txt=el("div","txt"), nm=el("div","plat-name");
+    const a=el("a",null,"افتح ↗"); a.href=p.url; a.target="_blank"; a.rel="noopener";
+    nm.append(el("span",null,p.n),a); txt.append(nm, el("div","ex-how",p.daily));
+    const c=el("button","check"); c.setAttribute("aria-pressed",!!(day.brand||{})[p.k]); c.setAttribute("aria-label","أنجزت "+p.n); c.innerHTML=CHECK;
+    c.onclick=()=>{ day.brand=day.brand||{}; day.brand[p.k]=!day.brand[p.k]; saveDay() };
+    top.append(txt,c); r.append(top);
+    if(p.post[wd]){ const t=el("div","post-today"); t.append(el("b",null,"انشر اليوم: "), document.createTextNode(p.post[wd])); r.append(t) }
+    box.append(r);
+  });
+  $("brCount").textContent=`${AR(brandCount())} من ${AR(PLATFORMS.length)}`;
+  const ideas=contentIdeas(); $("brIdea").textContent=ideas[(dayIndex()+(settings.brIdx||0))%ideas.length];
+  const wp=$("weekplan"); wp.textContent="";
+  [0,1,2,3,4,5,6].forEach(d=>{ const tasks=PLATFORMS.filter(p=>p.post[d]).map(p=>`${p.n}: ${p.post[d]}`);
+    wp.append(el("span","d"+(d===wd?" today":""),WD[d]), el("span",null,tasks.length?tasks.join(" · "):"تفاعل فقط")) });
+}
+$("brPillars").oninput=e=>{ settings.brandPillars=e.target.value; saveSettings() };
+$("brNext").onclick=()=>{ settings.brIdx=(settings.brIdx||0)+1; saveSettings(); renderBrand(); $("brDraftOut").hidden=true };
+$("brDraft").onclick=async()=>{
+  const btn=$("brDraft"), out=$("brDraftOut"); btn.disabled=true; btn.textContent="يكتب…";
+  try{
+    const r=await sample.json(`أنت مساعد لصانع محتوى سعودي يبني علامته الشخصية. محاوره: ${settings.brandPillars}. فكرة اليوم: ${$("brIdea").textContent}
+اكتب بالعربية الواضحة (لهجة بيضاء قريبة من الفصحى) ودون مبالغة أو إيموجي كثير:
+1) منشور لينكدإن (٨٠–١٥٠ كلمة) يبدأ بسطر جاذب وينتهي بسؤال.
+2) تغريدة لإكس (أقل من ٢٥٠ حرفاً).
+3) سكربت مقطع تيك توك ٤٥ ثانية: خطّاف أول ٣ ثوانٍ، ثم ٣ نقاط، ثم دعوة للتفاعل.
+أعد JSON فقط: {"linkedin":"...","x":"...","tiktok":"..."}`,{modelTier:"default"});
+    out.textContent=""; [["لينكدإن",r.linkedin],["إكس",r.x],["تيك توك · سكربت",r.tiktok]].forEach(([t,v])=>{ if(!v) return; const d=el("div"); d.append(el("h4",null,t), el("div",null,v)); out.append(d) });
+    out.hidden=false;
+  }catch(e){ toast(e&&e.code==="rate_limited"?"انتظر قليلاً ثم أعد المحاولة":"تعذّرت كتابة المسودات الآن") }
+  btn.disabled=false; btn.textContent="اكتب مسودات أخرى";
+};
+
 /* ---------- التقدم ---------- */
-const HABITS=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["تمرين",d=>+!!d.exercise],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking]];
+const HABITS=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["كاليسثنكس / مشي",d=>d.exercise?1:(d.sets&&Object.values(d.sets).some(Boolean))?.5:0],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking],["العلامة الشخصية",d=>{const n=Object.values(d.brand||{}).filter(Boolean).length;return n>=4?1:n?.5:0}]];
 function score(d){ if(!d) return 0; return HABITS.reduce((s,[,f])=>s+f(d),0)/HABITS.length }
 function last7(){ const out=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); out.push([keyOf(d),d]) } return out }
 function renderProgress(){
@@ -649,7 +892,7 @@ function buildICS(){
   for(let i=0;i<30;i++){
     const d=new Date(); d.setDate(d.getDate()+i);
     const p=prayerTimes(d,lat,lng), m=Object.fromEntries(Object.entries(p).map(([k,v])=>[k,toMin(v)])), wd=d.getDay();
-    const ev=[[m.fajr-15,"الفجر في المسجد",15],[m.fajr+25,"الورد: وجه اليوم × ٣٠",30],[m.sunrise+20,"مشي أو تمرين خفيف",20],[m.dhuhr-10,"الظهر في المسجد",15],[m.dhuhr+20,"جديد الذكاء الاصطناعي",10],[m.asr-10,"العصر في المسجد",15],[m.asr+20,"صفحة من كتاب",10],[m.maghrib-10,"المغرب في المسجد",15],[m.maghrib+15,"تمرين الإلقاء بالإنجليزية",10],[m.isha-10,"العشاء في المسجد",15],[m.isha+30,"فكرة ذكاء اصطناعي للمجتمع + تحدي الجرأة",10]];
+    const ev=[[m.fajr-15,"الفجر في المسجد",15],[m.fajr+25,"الورد: وجه اليوم × ٣٠",30],[m.sunrise+20,(settings.trainDays||[]).includes(wd)?"كاليسثنكس: الجسم كاملاً":"مشي ومرونة",35],[m.dhuhr-10,"الظهر في المسجد",15],[m.dhuhr+20,"جديد الذكاء الاصطناعي",10],[m.asr-10,"العصر في المسجد",15],[m.asr+20,"صفحة من كتاب",10],[m.maghrib-10,"المغرب في المسجد",15],[m.maghrib+15,"تمرين الإلقاء بالإنجليزية",10],[m.maghrib+35,"العلامة الشخصية: تفاعل ونشر",20],[m.isha-10,"العشاء في المسجد",15],[m.isha+30,"فكرة ذكاء اصطناعي للمجتمع + تحدي الجرأة",10]];
     if(wd<=4) ev.push([9*60+45,"السوق السعودي قبل الافتتاح",10]);
     if(wd>=1&&wd<=5) ev.push([usOpenKSA(d),"افتتاح السوق الأمريكي + الكريبتو",10]);
     ev.forEach(([t,title,dur],j)=>{ L.push("BEGIN:VEVENT",`UID:yawmi-${keyOf(d)}-${j}@yawmi`,`DTSTAMP:${stamp}`,`DTSTART:${at(d,t)}`,`DTEND:${at(d,t+dur)}`,`SUMMARY:${title}`,"BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${title}`,"TRIGGER:PT0M","END:VALARM","END:VEVENT") });
@@ -675,18 +918,18 @@ $("name").oninput=e=>{ settings.name=e.target.value.trim(); saveSettings(); rend
 /* ---------- التبويبات ---------- */
 function showTab(t){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
-  ["today","habits","news","speak","progress"].forEach(k=>$("p-"+k).hidden=k!==t);
+  ["today","habits","train","news","speak","progress"].forEach(k=>$("p-"+k).hidden=k!==t);
   window.scrollTo({top:0});
   try{ sessionStorage.setItem("yawmi.tab",t) }catch{}
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
 function render(){
-  renderTimeline(); renderQuran(); renderPrayers(); renderNews(); renderChecks(); renderSpeak(); renderProgress();
+  renderTimeline(); renderQuran(); renderPrayers(); renderNews(); renderChecks(); renderSpeak(); renderTrain(); renderBrand(); renderProgress();
 }
 function fillInputs(){
   $("bookTitle").value=settings.bookTitle||""; $("bookPage").value=settings.bookPage||1;
-  $("ideaText").value=day.idea||""; $("city").value=settings.city; $("name").value=settings.name||"";
+  $("ideaText").value=day.idea||""; $("brPillars").value=settings.brandPillars||""; $("city").value=settings.city; $("name").value=settings.name||"";
 }
 
 /* ---------- الإقلاع ---------- */
@@ -695,7 +938,7 @@ try{ const hijri=new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"num
   const greg=new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-arab",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
   $("dates").textContent=`${greg} · ${hijri}`; }catch{}
 fillInputs(); render(); resetTimer();
-try{ const t=sessionStorage.getItem("yawmi.tab"); if(t) showTab(t); else if(location.hash==="#habits"||location.hash==="#news"||location.hash==="#speak"||location.hash==="#progress") showTab(location.hash.slice(1)) }catch{}
+try{ const t=sessionStorage.getItem("yawmi.tab"); if(t) showTab(t); else if(location.hash==="#habits"||location.hash==="#train"||location.hash==="#news"||location.hash==="#speak"||location.hash==="#progress") showTab(location.hash.slice(1)) }catch{}
 $("syncNote").textContent="تقدّمك محفوظ على هذا الجهاز";
 setInterval(()=>{ if(keyOf(new Date())!==TODAY) location.reload(); else { renderTimeline(); renderNews() } },60000);
 
@@ -704,7 +947,7 @@ if(window.claude && window.claude.use){
     if(!d) return; db=d;
     try{
       const [s,t,all]=await Promise.all([db.doc("settings/main").get(),db.doc("days/"+TODAY).get(),db.collection("days").orderBy("date","desc").limit(60).get()]);
-      if(s.exists) Object.assign(settings,s.data());
+      if(s.exists){ Object.assign(settings,s.data()); settings.lv=settings.lv||{}; settings.trainDays=settings.trainDays||[0,2,4] }
       all.docs.forEach(x=>{ const v=x.data(); if(v&&v.date) history[v.date]=Object.assign(blankDay(),v) });
       if(t.exists){ const remote=Object.assign(blankDay(),t.data()); if(remote.quran>=day.quran) day=remote; }
       history[TODAY]=day;
@@ -712,7 +955,7 @@ if(window.claude && window.claude.use){
       $("syncNote").textContent="تقدّمك محفوظ ويتزامن بين أجهزتك";
     }catch{}
   }).catch(()=>{});
-  claude.use("sample").then(s=>{ if(s){ sample=s; $("genIdeas").hidden=false } }).catch(()=>{});
+  claude.use("sample").then(s=>{ if(s){ sample=s; $("genIdeas").hidden=false; $("brDraft").hidden=false } }).catch(()=>{});
   claude.use("downloads").then(d=>{ downloads=d }).catch(()=>{});
 }
 })();
