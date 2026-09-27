@@ -628,8 +628,8 @@ function lsLoad(){ try{ const s=JSON.parse(localStorage.getItem(LS)||"null"); if
 function lsSave(){ try{ history[TODAY]=day; localStorage.setItem(LS,JSON.stringify({settings,history})) }catch{} }
 
 let saveT=null, settingsT=null;
-function saveDay(){ day.u=Date.now(); scheduleSync(); history[TODAY]=day; lsSave(); render(); clearTimeout(saveT); saveT=setTimeout(()=>{ db&&db.doc("days/"+TODAY).set(day).catch(()=>{}) },600) }
-function saveSettings(){ settings.u=Date.now(); scheduleSync(); lsSave(); clearTimeout(settingsT); settingsT=setTimeout(()=>{ db&&db.doc("settings/main").set(settings).catch(()=>{}) },600) }
+function saveDay(){ stamp(day,"d:"+TODAY); scheduleSync(); history[TODAY]=day; lsSave(); render(); clearTimeout(saveT); saveT=setTimeout(()=>{ db&&db.doc("days/"+TODAY).set(day).catch(()=>{}) },600) }
+function saveSettings(){ stamp(settings,"s"); scheduleSync(); lsSave(); clearTimeout(settingsT); settingsT=setTimeout(()=>{ db&&db.doc("settings/main").set(settings).catch(()=>{}) },600) }
 
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200) }
 
@@ -1055,10 +1055,10 @@ async function shrink(file){
 let jrSaveT=null;
 function saveEntry(k){
   if(k===TODAY){ saveDay(); return }
-  const e=history[k]; e.u=Date.now(); scheduleSync(); lsSave(); render();
+  const e=history[k]; stamp(e,"d:"+k); scheduleSync(); lsSave(); render();
   clearTimeout(jrSaveT); jrSaveT=setTimeout(()=>{ db&&db.doc("days/"+k).set(e).catch(()=>{}) },600);
 }
-function ensureEntry(k){ if(k===TODAY) return day; if(!history[k]) history[k]=Object.assign(blankDay(),{date:k}); return history[k] }
+function ensureEntry(k){ if(k===TODAY) return day; if(!history[k]){ history[k]=Object.assign(blankDay(),{date:k}); SNAP["d:"+k]=snapOf(history[k]) } return history[k] }
 function openJournal(k){ jrDate=k; const d=parseKey(k); calMonth=new Date(d.getFullYear(),d.getMonth(),1); renderJournal(true); $("jrCard").scrollIntoView({behavior:"smooth",block:"start"}) }
 function renderJournal(fill){
   const k=jrDate, e=entryOf(k), d=parseKey(k), isToday=k===TODAY;
@@ -1215,19 +1215,52 @@ const b64dec=c=>new TextDecoder().decode(Uint8Array.from(atob(c.replace(/\s/g,""
 const blobB64=b=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=rej; r.readAsDataURL(b) });
 function gh(path,opts={}){
   const {raw,...o}=opts;
-  return fetch(`https://api.github.com/repos/${SY.cfg.repo}/contents/${path}`,{...o,cache:"no-store",
+  const bust=(o.method||"GET")==="GET"?`?ref=main&_=${Date.now()}`:"";
+  return fetch(`https://api.github.com/repos/${SY.cfg.repo}/contents/${path}${bust}`,{...o,cache:"no-store",
     headers:{Authorization:"Bearer "+SY.cfg.token, Accept:raw?"application/vnd.github.raw+json":"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"}});
 }
 function scheduleSync(){ if(!SY.cfg) return; clearTimeout(SY.t); SY.t=setTimeout(sync,4000) }
+/* دمج على مستوى الحقل: كل حقل (وكل مفتاح داخل prayers/markets/brand/sets/lv…) له وقت تعديل في ut،
+   فتعديلان على جهازين مختلفين في حقلين مختلفين لا يلغي أحدهما الآخر. */
+const SNAP={};
+const plain=v=>v&&typeof v==="object"&&!Array.isArray(v);
+const J=v=>JSON.stringify(v===undefined?null:v);
+const snapOf=o=>{ const c={}; for(const k in o) if(k!=="u"&&k!=="ut") c[k]=JSON.parse(J(o[k])); return c };
+function stamp(obj,key){
+  const now=Date.now(), prev=SNAP[key]||{}; obj.ut=obj.ut||{};
+  new Set([...Object.keys(obj),...Object.keys(prev)]).forEach(k=>{ if(k==="u"||k==="ut") return;
+    const a=obj[k], b=prev[k];
+    if(plain(a)||plain(b)){ const A=plain(a)?a:{}, B=plain(b)?b:{}; new Set([...Object.keys(A),...Object.keys(B)]).forEach(sk=>{ if(J(A[sk])!==J(B[sk])) obj.ut[k+"."+sk]=now }) }
+    else if(J(a)!==J(b)) obj.ut[k]=now });
+  obj.u=now; SNAP[key]=snapOf(obj);
+}
+const getP=(o,p)=>{ const [a,b]=p.split("."); return b===undefined?o[a]:(plain(o[a])?o[a][b]:undefined) };
+function setP(o,p,v){ const [a,b]=p.split("."); if(b===undefined){ o[a]=v; return } if(!plain(o[a])) o[a]={}; if(v===undefined) delete o[a][b]; else o[a][b]=v }
+/* يعيد {v, local, push}: v الناتج، local = تغيّر شيء محلياً، push = عندنا ما ليس عند المستودع */
+function mergeObj(L,R){
+  if(!R) return {v:L, local:false, push:!!(L&&L.ut&&Object.keys(L.ut).length)};
+  if(!L) return {v:R, local:true, push:false};
+  const lut=L.ut||{}, rut=R.ut||{};
+  if(!Object.keys(lut).length&&!Object.keys(rut).length){ // بيانات قديمة بلا طوابع: الأحدث كاملاً
+    return (R.u||0)>(L.u||0)?{v:R,local:true,push:false}:{v:L,local:false,push:(L.u||0)>(R.u||0)} }
+  const out=JSON.parse(J(L)); out.ut=Object.assign({},lut); let local=false, push=false;
+  new Set([...Object.keys(lut),...Object.keys(rut)]).forEach(p=>{ const lt=lut[p]||0, rt=rut[p]||0;
+    if(rt>lt){ setP(out,p,JSON.parse(J(getP(R,p)))); out.ut[p]=rt; local=true } else if(lt>rt) push=true });
+  out.u=Math.max(L.u||0,R.u||0);
+  return {v:out,local,push};
+}
+function snapAll(){ SNAP.s=snapOf(settings); SNAP["d:"+TODAY]=snapOf(day); for(const k in history) if(k!==TODAY) SNAP["d:"+k]=snapOf(history[k]) }
 function mergeRemote(remote){
   let local=false, push=false;
-  const rs=remote.settings;
-  if(rs&&(rs.u||0)>(settings.u||0)){ Object.assign(settings,rs); settings.lv=settings.lv||{}; settings.trainDays=settings.trainDays||[0,2,4]; local=true }
-  else if((settings.u||0)>((rs&&rs.u)||0)) push=true;
-  const rd=remote.days||{}, keys=new Set([...Object.keys(rd),...Object.keys(history),TODAY]);
-  keys.forEach(k=>{ const L=k===TODAY?day:history[k], R=rd[k];
-    if(R&&(!L||(R.u||0)>(L.u||0))){ const v=Object.assign(blankDay(),R,{date:k}); if(k===TODAY) day=v; history[k]=v; local=true }
-    else if(L&&L.u&&(!R||(L.u||0)>(R.u||0))) push=true });
+  const ms=mergeObj(settings,remote.settings);
+  if(ms.local){ Object.keys(settings).forEach(k=>delete settings[k]); Object.assign(settings,ms.v); settings.lv=settings.lv||{}; settings.trainDays=settings.trainDays||[0,2,4]; local=true }
+  push=push||ms.push;
+  const rd=remote.days||{};
+  new Set([...Object.keys(rd),...Object.keys(history),TODAY]).forEach(k=>{
+    const L=k===TODAY?day:history[k], m=mergeObj(L,rd[k]);
+    if(m.local){ const v=Object.assign(blankDay(),m.v,{date:k}); if(k===TODAY) day=v; history[k]=v; local=true }
+    push=push||m.push });
+  snapAll();
   return {local,push};
 }
 async function pushPhotos(){
@@ -1268,7 +1301,7 @@ async function sync(){
   }catch(e){
     if(e&&e.auth) syStatus("رفض GitHub التوكن. ربما انتهت مدته أو لا يملك صلاحية Contents على المستودع. افصل الجهاز واربطه بتوكن جديد.","err");
     else syStatus("تعذّرت المزامنة الآن، وستُعاد تلقائياً. تغييراتك محفوظة على الجهاز.","err");
-  }finally{ SY.busy=false; if(SY.again){ SY.again=false; setTimeout(sync,1500) } }
+  }finally{ if(!SY.again) SY.tries=0; SY.busy=false; if(SY.again){ SY.again=false; setTimeout(sync,1500) } }
 }
 function renderSyncCard(){
   const on=!!SY.cfg; $("syLinkBox").hidden=on; $("syOnBox").hidden=!on;
@@ -1297,7 +1330,7 @@ lsLoad();
 try{ const hijri=new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"numeric",month:"long",year:"numeric"}).format(new Date());
   const greg=new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-arab",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
   $("dates").textContent=`${greg} · ${hijri}`; }catch{}
-fillInputs(); render(); resetTimer();
+snapAll(); fillInputs(); render(); resetTimer();
 try{ const t=sessionStorage.getItem("yawmi.tab"); if(t) showTab(t); else if(location.hash==="#habits"||location.hash==="#train"||location.hash==="#news"||location.hash==="#speak"||location.hash==="#progress") showTab(location.hash.slice(1)) }catch{}
 $("syncNote").textContent="تقدّمك محفوظ على هذا الجهاز";
 if(!window.claude){
@@ -1305,7 +1338,8 @@ if(!window.claude){
   if(location.hash.startsWith("#sync=")){ const [t,r]=decodeURIComponent(location.hash.slice(6)).split("|"); try{ history_replace() }catch{} if(t&&r){ showTab("progress"); linkDevice(t,r) } }
   else if(SY.cfg) sync();
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") sync() });
-  setInterval(()=>{ if(document.visibilityState==="visible"&&SY.cfg&&!SY.busy) sync() },120000);
+  setInterval(()=>{ if(document.visibilityState==="visible"&&SY.cfg&&!SY.busy) sync() },20000);
+  window.addEventListener("focus",()=>{ if(SY.cfg&&!SY.busy) sync() });
 }
 function history_replace(){ window.history.replaceState(null,"",location.pathname) }
 setInterval(()=>{ if(keyOf(new Date())!==TODAY) location.reload(); else { renderTimeline(); renderNews() } },60000);
