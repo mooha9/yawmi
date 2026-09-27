@@ -1,7 +1,7 @@
 # يومي
 
 تطبيق جدول يومي حول أوقات الصلاة. المصدر `src/app.html` (قصاصة Artifact)، و`build.py` يبني `public/`.
-أي دفع إلى `main` أو `claude/**` ينشر الموقع على https://yawmi-wird.netlify.app عبر GitHub Actions.
+أي دفع إلى `main` ينشر الموقع على https://mooha9.github.io/yawmi/ عبر GitHub Actions (GitHub Pages). نسخة Netlify القديمة متوقفة لأن رصيد الحساب نفد.
 
 ## ملخص الأخبار: `src/news.json`
 - حافظ على البنية بالضبط: `date` (YYYY-MM-DD بتوقيت الرياض)، و`label`، و`markets` (بالترتيب sa ثم us ثم crypto، وكل عنصر فيه k وname وheadline وfigures وpoints وwatch وsources)، و`ai` (فيه headline وitems من أزواج [وسم، جملة] وforYou وsources).

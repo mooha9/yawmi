@@ -2,3 +2,5 @@ public/
 deploy.zip
 .DS_Store
 logs/
+.site_id
+.site_name

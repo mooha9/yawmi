@@ -29,9 +29,9 @@ html = f"""<!DOCTYPE html>
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{DESC}">
 <meta property="og:locale" content="ar_SA">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>:root{{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}body{{margin:0}}[hidden]{{display:none!important}}img{{max-width:100%}}</style>
 {chr(10).join(fonts)}
 {style}
@@ -68,7 +68,7 @@ def icon(n):
 for name,size in (("apple-touch-icon.png",180),("icon-192.png",192),("icon-512.png",512)):
     if not (PUB/name).exists(): write_png(PUB/name,size,size,icon(size))
 (PUB/"icon.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1F6B52"/><circle cx="256" cy="256" r="154" fill="none" stroke="#2E8065" stroke-width="66"/><path d="M406.6 223.9A154 154 0 1 1 256 102" fill="none" stroke="#E0B04E" stroke-width="66" transform="rotate(100 256 256) rotate(-100 256 256)"/><circle cx="256" cy="256" r="36" fill="#E0B04E"/></svg>')
-(PUB/"manifest.webmanifest").write_text(json.dumps({"name":title,"short_name":title,"description":DESC,"lang":"ar","dir":"rtl","start_url":"/","display":"standalone","background_color":"#F3F5F1","theme_color":"#1F6B52","icons":[{"src":"/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]},ensure_ascii=False))
+(PUB/"manifest.webmanifest").write_text(json.dumps({"name":title,"short_name":title,"description":DESC,"lang":"ar","dir":"rtl","start_url":"./","scope":"./","display":"standalone","background_color":"#F3F5F1","theme_color":"#1F6B52","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]},ensure_ascii=False))
 (PUB/"_headers").write_text("""/*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
