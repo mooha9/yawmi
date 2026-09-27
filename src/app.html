@@ -271,6 +271,12 @@ textarea{min-height:80px;resize:vertical}
 .lightbox{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px))}
 .lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
 .lightbox button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));inset-inline-end:12px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:20px}
+.sunan{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sunan button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:right}
+.sunan button b{font-size:15px}
+.sunan button span{font-size:12px;color:var(--muted)}
+.sunan button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.sunan button[aria-pressed="true"] span{color:inherit;opacity:.85}
 .toast{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom,0px));inset-inline:16px;max-width:420px;margin-inline:auto;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;text-align:center;z-index:9;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
 .toast.show{opacity:1;transform:none}
 .sync{font-size:11.5px;color:var(--faint);text-align:center}
@@ -331,6 +337,8 @@ textarea{min-height:80px;resize:vertical}
   <div class="card">
     <div class="card-head"><h2>الصلوات في المسجد</h2><span class="label num" id="prCount"></span></div>
     <div class="prayers" id="prayers"></div>
+    <div class="card-head" style="margin-top:4px"><h2 style="font-size:16px">السنن</h2><span class="label num" id="snCount"></span></div>
+    <div class="sunan" id="sunan"></div>
   </div>
 
   <div class="card">
@@ -585,7 +593,7 @@ function usOpenKSA(d){
 
 /* ---------- الحالة ---------- */
 const PRAYERS = [["fajr","الفجر"],["dhuhr","الظهر"],["asr","العصر"],["maghrib","المغرب"],["isha","العشاء"]];
-const blankDay = () => ({date:TODAY, journal:"", photos:[], quran:0, quranPage:null, prayers:{}, book:false, exercise:false, sets:{}, brand:{}, markets:{}, ainews:false, aiidea:false, idea:"", english:false, speaking:false});
+const blankDay = () => ({date:TODAY, duha:false, witr:false, journal:"", photos:[], quran:0, quranPage:null, prayers:{}, book:false, exercise:false, sets:{}, brand:{}, markets:{}, ainews:false, aiidea:false, idea:"", english:false, speaking:false});
 let settings = {city:"riyadh", name:"", quranPage:1, bookTitle:"", bookPage:1, ladder:1, enIdx:0, trainDays:[0,2,4], lv:{}, brandPillars:"الذكاء الاصطناعي للمجتمع · الأسواق والاستثمار · العادات والإنتاجية · الإلقاء", brIdx:0};
 let day = blankDay();
 let history = {}; // date -> day
@@ -602,6 +610,13 @@ function saveSettings(){ lsSave(); clearTimeout(settingsT); settingsT=setTimeout
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200) }
 
 /* ---------- الجدول ---------- */
+/* أوقات السنن: الضحى من ارتفاع الشمس (الشروق + ١٥ د) إلى قبيل الظهر بـ١٠ د، وأفضله منتصف ذلك.
+   الوتر من بعد العشاء إلى الفجر، وآخر الليل أفضل لمن وثق بالقيام. الليل من المغرب إلى فجر الغد. */
+function sunanTimes(m){
+  const dS=m.sunrise+15, dE=m.dhuhr-10, dBest=Math.round((dS+dE)/2);
+  const night=(m.fajr+1440)-m.maghrib, lastThird=Math.round((m.fajr+1440)-night/3);
+  return {dS,dE,dBest,lastThird};
+}
 function schedule(){
   const [,lat,lng] = CITIES[settings.city]||CITIES.riyadh;
   const p = prayerTimes(new Date(), lat, lng);
@@ -614,6 +629,9 @@ function schedule(){
     {t:m.sunrise+20, id:"exercise", ttl:isTrainDay()?"كاليسثنكس: الجسم كاملاً":"مشي ومرونة", sub:isTrainDay()?"٦ تمارين · نحو ٣٥ دقيقة":"٢٠ دقيقة مشي + ١٠ دقائق مرونة", done:day.exercise, go:"train", progress:isTrainDay()?`${AR(setsDone())}/${AR(EX.length*3)}`:null},
     {t:m.maghrib+35, id:"brand", ttl:"العلامة الشخصية", sub:brandSub(), done:brandCount()===PLATFORMS.length, go:"speak", progress:`${AR(brandCount())}/${AR(PLATFORMS.length)}`},
     {t:9*60+45, id:"mk-sa", ttl:"السوق السعودي", sub:"قبل الافتتاح ١٠:٠٠ ص", done:!!day.markets.sa, go:"news"},
+    ...(()=>{ const sn=sunanTimes(m); return [
+      {t:sn.dBest, id:"duha", ttl:"سنة الضحى", sub:`ركعتان فأكثر · وقتها ${fmt(sn.dS)} – ${fmt(sn.dE)}`, done:!!day.duha},
+      {t:m.isha+75, id:"witr", ttl:"الوتر قبل النوم", sub:`ركعة فأكثر · أو آخر الليل من ${fmt(sn.lastThird)} إن وثقت بالقيام`, done:!!day.witr}] })(),
     {t:m.dhuhr, kind:"prayer", id:"p-dhuhr", ttl:"صلاة الظهر", sub:"في المسجد", done:!!day.prayers.dhuhr},
     {t:m.dhuhr+20, id:"ainews", ttl:"جديد الذكاء الاصطناعي", sub:"ملخص مكتوب في دقيقتين", done:day.ainews, go:"news"},
     {t:m.asr, kind:"prayer", id:"p-asr", ttl:"صلاة العصر", sub:"في المسجد", done:!!day.prayers.asr},
@@ -715,7 +733,14 @@ function shiftPage(d){ const pg=Math.max(1,Math.min(604,(day.quranPage||settings
 $("qPrev").onclick=()=>shiftPage(-1); $("qNext").onclick=()=>shiftPage(1);
 
 /* ---------- الصلوات ---------- */
-function renderPrayers(){
+function renderSunan(){
+  const {p}=schedule(), sn=sunanTimes(p), box=$("sunan"); box.textContent="";
+  [["duha","الضحى",`${fmt(sn.dS)} – ${fmt(sn.dE)}`],["witr","الوتر",`بعد العشاء حتى الفجر`]].forEach(([k,n,t])=>{
+    const b=el("button"); b.setAttribute("aria-pressed",!!day[k]); b.append(el("b",null,n), el("span","num",t));
+    b.onclick=()=>toggle(k); box.append(b) });
+  $("snCount").textContent=`${AR(["duha","witr"].filter(k=>day[k]).length)} من ٢`;
+}
+function renderPrayers(){ renderSunan();
   const {p}=schedule(); const box=$("prayers"); box.textContent="";
   PRAYERS.forEach(([k,n])=>{ const b=document.createElement("button"); b.setAttribute("aria-pressed",!!day.prayers[k]);
     b.innerHTML=`<b></b><span class="num"></span>`; b.querySelector("b").textContent=n; b.querySelector("span").textContent=fmt(p[k]);
@@ -1084,7 +1109,7 @@ $("calNext").onclick=()=>{ calMonth=new Date(calMonth.getFullYear(),calMonth.get
 $("jrSearch").oninput=renderSearch;
 
 /* ---------- التقدم ---------- */
-const HABITS=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["كاليسثنكس / مشي",d=>d.exercise?1:(d.sets&&Object.values(d.sets).some(Boolean))?.5:0],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking],["الصيام",d=>{ if(!d.date) return null; const [y,mo,da]=d.date.split("-").map(Number); return fastInfo(new Date(y,mo-1,da)).ok?(d.fast?1:0):null }],["التدوين",d=>hasEntry(d)?1:0],["العلامة الشخصية",d=>{const n=Object.values(d.brand||{}).filter(Boolean).length;return n>=4?1:n?.5:0}]];
+const HABITS=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["كاليسثنكس / مشي",d=>d.exercise?1:(d.sets&&Object.values(d.sets).some(Boolean))?.5:0],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking],["الصيام",d=>{ if(!d.date) return null; const [y,mo,da]=d.date.split("-").map(Number); return fastInfo(new Date(y,mo-1,da)).ok?(d.fast?1:0):null }],["الضحى",d=>+!!d.duha],["الوتر",d=>+!!d.witr],["التدوين",d=>hasEntry(d)?1:0],["العلامة الشخصية",d=>{const n=Object.values(d.brand||{}).filter(Boolean).length;return n>=4?1:n?.5:0}]];
 function score(d){ if(!d) return 0; const v=HABITS.map(([,f])=>f(d)).filter(x=>x!=null); return v.reduce((a,b)=>a+b,0)/v.length }
 function last7(){ const out=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); out.push([keyOf(d),d]) } return out }
 function renderProgress(){
@@ -1111,7 +1136,7 @@ function buildICS(){
   for(let i=0;i<30;i++){
     const d=new Date(); d.setDate(d.getDate()+i);
     const p=prayerTimes(d,lat,lng), m=Object.fromEntries(Object.entries(p).map(([k,v])=>[k,toMin(v)])), wd=d.getDay();
-    const ev=[[m.fajr-15,"الفجر في المسجد",15],[m.fajr+25,"الورد: وجه اليوم × ٣٠",30],[m.sunrise+20,(settings.trainDays||[]).includes(wd)?"كاليسثنكس: الجسم كاملاً":"مشي ومرونة",35],[m.dhuhr-10,"الظهر في المسجد",15],[m.dhuhr+20,"جديد الذكاء الاصطناعي",10],[m.asr-10,"العصر في المسجد",15],[m.asr+20,"صفحة من كتاب",10],[m.maghrib-10,"المغرب في المسجد",15],[m.maghrib+15,"تمرين الإلقاء بالإنجليزية",10],[m.maghrib+35,"العلامة الشخصية: تفاعل ونشر",20],[m.isha-10,"العشاء في المسجد",15],[m.isha+30,"فكرة ذكاء اصطناعي للمجتمع + تحدي الجرأة",10],[m.isha+60,"التدوين اليومي",10]];
+    const ev=[[m.fajr-15,"الفجر في المسجد",15],[m.fajr+25,"الورد: وجه اليوم × ٣٠",30],[m.sunrise+20,(settings.trainDays||[]).includes(wd)?"كاليسثنكس: الجسم كاملاً":"مشي ومرونة",35],[m.dhuhr-10,"الظهر في المسجد",15],[m.dhuhr+20,"جديد الذكاء الاصطناعي",10],[m.asr-10,"العصر في المسجد",15],[m.asr+20,"صفحة من كتاب",10],[m.maghrib-10,"المغرب في المسجد",15],[m.maghrib+15,"تمرين الإلقاء بالإنجليزية",10],[m.maghrib+35,"العلامة الشخصية: تفاعل ونشر",20],[m.isha-10,"العشاء في المسجد",15],[m.isha+30,"فكرة ذكاء اصطناعي للمجتمع + تحدي الجرأة",10],[m.isha+60,"التدوين اليومي",10],[m.isha+75,"الوتر قبل النوم",10],[sunanTimes(m).dBest,"سنة الضحى",10]];
     if(wd<=4) ev.push([9*60+45,"السوق السعودي قبل الافتتاح",10]);
     const fT=fastInfo(addDays(d,1)), fD=fastInfo(d);
     if(fT.ok) ev.push([m.isha+15,"غداً صيام "+fastLabel(fT)+": انوِ واضبط منبه السحور",10]);
