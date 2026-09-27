@@ -1,5 +1,5 @@
 #!/bin/zsh
-# يحدّث ملخص أخبار «يومي» كل صباح: Claude يكتب src/news.json فقط، والسكربت يتحقق ثم يدفع، وGitHub Actions ينشر إلى Netlify
+# يحدّث ملخص أخبار «يومي» كل صباح: Claude يكتب src/news.json فقط، والسكربت يتحقق ثم يدفع، وGitHub Actions ينشر إلى GitHub Pages
 set -u
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 cd "$(dirname "$0")/.."
