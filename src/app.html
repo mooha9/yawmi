@@ -511,6 +511,30 @@ textarea{min-height:80px;resize:vertical}
     <div class="row"><button class="btn primary" id="icsBtn">حمّل تذكيرات ٣٠ يوماً</button></div>
     <p class="hint" id="icsNote" style="margin:0" hidden></p>
   </div>
+  <div class="card" id="syncCard" hidden>
+    <div class="card-head"><h2>المزامنة بين أجهزتك</h2><span class="pill" id="syPill">غير مفعّلة</span></div>
+    <p class="hint" id="syStatus" style="margin:0">اربط جوالك واللابتوب بمستودع خاص في حسابك على GitHub، فيظهر تقدّمك وتدويناتك وصورك على الجهازين.</p>
+    <div id="syLinkBox" style="display:flex;flex-direction:column;gap:10px">
+      <ol class="plain" style="font-size:13.5px">
+        <li>افتح <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">صفحة إنشاء توكن في GitHub</a>.</li>
+        <li>الاسم «يومي — المزامنة»، والمدة سنة.</li>
+        <li><b>Repository access</b> ← <b>Only select repositories</b> ← اختر <b>yawmi-data</b> فقط.</li>
+        <li><b>Permissions</b> ← <b>Contents</b> ← <b>Read and write</b>.</li>
+        <li>اضغط <b>Generate token</b>، وانسخه والصقه هنا.</li>
+      </ol>
+      <div class="field"><label for="syToken">التوكن</label><input type="password" id="syToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…" dir="ltr"></div>
+      <div class="field"><label for="syRepo">المستودع</label><input type="text" id="syRepo" value="mooha9/yawmi-data" dir="ltr" autocomplete="off" spellcheck="false"></div>
+      <div class="row"><button class="btn primary" id="syLink">اربط هذا الجهاز</button></div>
+      <p class="hint" style="margin:0">يُحفظ التوكن على هذا الجهاز فقط، ولا يفتح إلا مستودع البيانات. اربط جهازك الأول هنا، ثم امسح رمز QR بالجوال.</p>
+    </div>
+    <div id="syOnBox" hidden style="display:flex;flex-direction:column;gap:10px">
+      <div class="row"><button class="btn primary" id="syNow">زامن الآن</button><button class="btn" id="syQRBtn">اربط جهازاً آخر (QR)</button><button class="btn ghost" id="syOff">افصل هذا الجهاز</button></div>
+      <div id="syQRWrap" hidden style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div id="syQR" style="background:#fff;padding:12px;border-radius:12px"></div>
+        <p class="hint" style="margin:0;text-align:center">امسحه بكاميرا الجوال، فيفتح التطبيق مربوطاً. لا تشارك هذا الرمز مع أحد.</p>
+      </div>
+    </div>
+  </div>
   <div class="card">
     <h2>الإعدادات</h2>
     <div class="field"><label for="city">المدينة (لأوقات الصلاة، تقويم أم القرى)</label><select id="city"></select></div>
@@ -604,8 +628,8 @@ function lsLoad(){ try{ const s=JSON.parse(localStorage.getItem(LS)||"null"); if
 function lsSave(){ try{ history[TODAY]=day; localStorage.setItem(LS,JSON.stringify({settings,history})) }catch{} }
 
 let saveT=null, settingsT=null;
-function saveDay(){ history[TODAY]=day; lsSave(); render(); clearTimeout(saveT); saveT=setTimeout(()=>{ db&&db.doc("days/"+TODAY).set(day).catch(()=>{}) },600) }
-function saveSettings(){ lsSave(); clearTimeout(settingsT); settingsT=setTimeout(()=>{ db&&db.doc("settings/main").set(settings).catch(()=>{}) },600) }
+function saveDay(){ day.u=Date.now(); scheduleSync(); history[TODAY]=day; lsSave(); render(); clearTimeout(saveT); saveT=setTimeout(()=>{ db&&db.doc("days/"+TODAY).set(day).catch(()=>{}) },600) }
+function saveSettings(){ settings.u=Date.now(); scheduleSync(); lsSave(); clearTimeout(settingsT); settingsT=setTimeout(()=>{ db&&db.doc("settings/main").set(settings).catch(()=>{}) },600) }
 
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200) }
 
@@ -1019,6 +1043,7 @@ async function photoURL(ph){
   if(ph.src==="asset") return "/_blob/"+ph.id;
   if(urlCache[ph.id]) return urlCache[ph.id];
   try{ const b=await IDB.get(ph.id); if(b) return urlCache[ph.id]=URL.createObjectURL(b) }catch{}
+  if(ph.up&&SY.cfg){ try{ const r=await gh(`photos/${ph.id}.jpg`,{raw:true}); if(r.ok){ const b=await r.blob(); IDB.put(ph.id,b).catch(()=>{}); return urlCache[ph.id]=URL.createObjectURL(b) } }catch{} }
   return null;
 }
 async function shrink(file){
@@ -1030,7 +1055,7 @@ async function shrink(file){
 let jrSaveT=null;
 function saveEntry(k){
   if(k===TODAY){ saveDay(); return }
-  const e=history[k]; lsSave(); render();
+  const e=history[k]; e.u=Date.now(); scheduleSync(); lsSave(); render();
   clearTimeout(jrSaveT); jrSaveT=setTimeout(()=>{ db&&db.doc("days/"+k).set(e).catch(()=>{}) },600);
 }
 function ensureEntry(k){ if(k===TODAY) return day; if(!history[k]) history[k]=Object.assign(blankDay(),{date:k}); return history[k] }
@@ -1179,6 +1204,94 @@ function fillInputs(){
   $("ideaText").value=day.idea||""; $("jrText").value=entryOf(jrDate).journal||""; $("brPillars").value=settings.brandPillars||""; $("city").value=settings.city; $("name").value=settings.name||"";
 }
 
+/* ---------- المزامنة عبر مستودع GitHub خاص (للموقع المستقل فقط؛ الـArtifact يزامن بقاعدة بياناته) ----------
+   state.json = {v, settings, days}. كل يوم وكل إعدادات تحمل u (وقت آخر تعديل)، والأحدث يفوز عند الدمج.
+   الصور تُرفع إلى photos/<id>.jpg ويُعلَّم عليها up:true، والجهاز الآخر ينزّلها عند العرض ويخزّنها. */
+const SY={key:"yawmi.sync", cfg:null, busy:false, t:null, again:false, tries:0};
+try{ SY.cfg=JSON.parse(localStorage.getItem(SY.key)||"null") }catch{}
+const sySave=()=>{ try{ SY.cfg?localStorage.setItem(SY.key,JSON.stringify(SY.cfg)):localStorage.removeItem(SY.key) }catch{} };
+const b64enc=str=>{ const by=new TextEncoder().encode(str); let bin=""; for(let i=0;i<by.length;i+=0x8000) bin+=String.fromCharCode.apply(null,by.subarray(i,i+0x8000)); return btoa(bin) };
+const b64dec=c=>new TextDecoder().decode(Uint8Array.from(atob(c.replace(/\s/g,"")),ch=>ch.charCodeAt(0)));
+const blobB64=b=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=rej; r.readAsDataURL(b) });
+function gh(path,opts={}){
+  const {raw,...o}=opts;
+  return fetch(`https://api.github.com/repos/${SY.cfg.repo}/contents/${path}`,{...o,cache:"no-store",
+    headers:{Authorization:"Bearer "+SY.cfg.token, Accept:raw?"application/vnd.github.raw+json":"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"}});
+}
+function scheduleSync(){ if(!SY.cfg) return; clearTimeout(SY.t); SY.t=setTimeout(sync,4000) }
+function mergeRemote(remote){
+  let local=false, push=false;
+  const rs=remote.settings;
+  if(rs&&(rs.u||0)>(settings.u||0)){ Object.assign(settings,rs); settings.lv=settings.lv||{}; settings.trainDays=settings.trainDays||[0,2,4]; local=true }
+  else if((settings.u||0)>((rs&&rs.u)||0)) push=true;
+  const rd=remote.days||{}, keys=new Set([...Object.keys(rd),...Object.keys(history),TODAY]);
+  keys.forEach(k=>{ const L=k===TODAY?day:history[k], R=rd[k];
+    if(R&&(!L||(R.u||0)>(L.u||0))){ const v=Object.assign(blankDay(),R,{date:k}); if(k===TODAY) day=v; history[k]=v; local=true }
+    else if(L&&L.u&&(!R||(L.u||0)>(R.u||0))) push=true });
+  return {local,push};
+}
+async function pushPhotos(){
+  let changed=false;
+  for(const [k,e] of Object.entries(Object.assign({},history,{[TODAY]:day}))){
+    for(const ph of (e&&e.photos)||[]){ if(ph.src!=="local"||ph.up) continue;
+      const blob=await IDB.get(ph.id).catch(()=>null); if(!blob) continue;
+      const r=await gh(`photos/${ph.id}.jpg`,{method:"PUT",body:JSON.stringify({message:"صورة "+k,content:await blobB64(blob)})});
+      if(r.ok||r.status===422){ ph.up=true; e.u=Date.now(); changed=true } } }
+  if(changed) lsSave();
+  return changed;
+}
+function syStatus(txt,state){ $("syStatus").textContent=txt; const pl=$("syPill"); pl.textContent=state==="ok"?"مفعّلة":state==="err"?"خطأ":state==="busy"?"تزامن…":"غير مفعّلة"; pl.className="pill"+(state==="ok"?" open":"") }
+const agoTxt=t=>{ const m=Math.round((Date.now()-t)/60000); return m<1?"الآن":m<60?`قبل ${AR(m)} د`:`قبل ${AR(Math.round(m/60))} س` };
+async function sync(){
+  if(!SY.cfg) return; if(SY.busy){ SY.again=true; return }
+  SY.busy=true; syStatus("يزامن…","busy");
+  try{
+    let remote={days:{}}, sha=null;
+    const r=await gh("state.json");
+    if(r.status===200){ const j=await r.json(); sha=j.sha; const txt=j.content?b64dec(j.content):await (await gh("state.json",{raw:true})).text(); remote=JSON.parse(txt||"{}") }
+    else if(r.status===401||r.status===403) throw {auth:true};
+    else if(r.status!==404) throw {status:r.status};
+    const {local,push}=mergeRemote(remote);
+    if(local){ lsSave(); const a=document.activeElement; if(!a||!/INPUT|TEXTAREA|SELECT/.test(a.tagName)) fillInputs(); render() }
+    const photos=await pushPhotos();
+    if(push||photos||!sha){
+      const body={message:"مزامنة "+new Date().toISOString().slice(0,16), content:b64enc(JSON.stringify({v:1,settings,days:Object.assign({},history,{[TODAY]:day})}))};
+      if(sha) body.sha=sha;
+      const pr=await gh("state.json",{method:"PUT",body:JSON.stringify(body)});
+      if((pr.status===409||pr.status===422)&&SY.tries<3){ SY.tries++; SY.again=true }
+      else if(pr.status===401||pr.status===403) throw {auth:true};
+      else if(!pr.ok) throw {status:pr.status};
+    }
+    SY.tries=0; SY.cfg.last=Date.now(); sySave();
+    syStatus("آخر مزامنة: "+agoTxt(SY.cfg.last)+". تقدّمك وتدويناتك وصورك متطابقة على أجهزتك المربوطة.","ok");
+    $("syncNote").textContent="يتزامن بين أجهزتك · "+agoTxt(SY.cfg.last);
+  }catch(e){
+    if(e&&e.auth) syStatus("رفض GitHub التوكن. ربما انتهت مدته أو لا يملك صلاحية Contents على المستودع. افصل الجهاز واربطه بتوكن جديد.","err");
+    else syStatus("تعذّرت المزامنة الآن، وستُعاد تلقائياً. تغييراتك محفوظة على الجهاز.","err");
+  }finally{ SY.busy=false; if(SY.again){ SY.again=false; setTimeout(sync,1500) } }
+}
+function renderSyncCard(){
+  const on=!!SY.cfg; $("syLinkBox").hidden=on; $("syOnBox").hidden=!on;
+  if(!on) syStatus("اربط جوالك واللابتوب بمستودع خاص في حسابك على GitHub، فيظهر تقدّمك وتدويناتك وصورك على الجهازين.","off");
+}
+async function linkDevice(token,repo){
+  SY.cfg={token,repo}; syStatus("يتحقق من التوكن…","busy");
+  try{ const r=await fetch(`https://api.github.com/repos/${repo}`,{headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json"}});
+    if(!r.ok) throw 0; const j=await r.json(); if(j.permissions&&!j.permissions.push) throw 0;
+  }catch{ SY.cfg=null; syStatus("التوكن أو اسم المستودع غير صحيح، أو التوكن لا يملك صلاحية الكتابة. راجع الخطوات وحاول مرة أخرى.","err"); return false }
+  sySave(); renderSyncCard(); toast("رُبط هذا الجهاز. تجري المزامنة الأولى"); await sync(); return true;
+}
+$("syLink").onclick=()=>{ const t=$("syToken").value.trim(), r=$("syRepo").value.trim(); if(t&&r) linkDevice(t,r) };
+$("syNow").onclick=()=>sync();
+$("syOff").onclick=()=>{ SY.cfg=null; sySave(); $("syQRWrap").hidden=true; $("syQR").textContent=""; renderSyncCard(); $("syncNote").textContent="تقدّمك محفوظ على هذا الجهاز"; toast("فُصل هذا الجهاز. بياناتك باقية عليه") };
+$("syQRBtn").onclick=()=>{
+  const wrap=$("syQRWrap"); if(!wrap.hidden){ wrap.hidden=true; $("syQR").textContent=""; return }
+  const url=location.origin+location.pathname+"#sync="+encodeURIComponent(SY.cfg.token+"|"+SY.cfg.repo);
+  const draw=()=>{ $("syQR").textContent=""; new QRCode($("syQR"),{text:url,width:220,height:220,correctLevel:QRCode.CorrectLevel.M}); wrap.hidden=false };
+  if(window.QRCode) return draw();
+  const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"; sc.onload=draw; sc.onerror=()=>toast("تعذّر تحميل رمز QR"); document.head.append(sc);
+};
+
 /* ---------- الإقلاع ---------- */
 lsLoad();
 try{ const hijri=new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"numeric",month:"long",year:"numeric"}).format(new Date());
@@ -1187,6 +1300,14 @@ try{ const hijri=new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"num
 fillInputs(); render(); resetTimer();
 try{ const t=sessionStorage.getItem("yawmi.tab"); if(t) showTab(t); else if(location.hash==="#habits"||location.hash==="#train"||location.hash==="#news"||location.hash==="#speak"||location.hash==="#progress") showTab(location.hash.slice(1)) }catch{}
 $("syncNote").textContent="تقدّمك محفوظ على هذا الجهاز";
+if(!window.claude){
+  $("syncCard").hidden=false; renderSyncCard();
+  if(location.hash.startsWith("#sync=")){ const [t,r]=decodeURIComponent(location.hash.slice(6)).split("|"); try{ history_replace() }catch{} if(t&&r){ showTab("progress"); linkDevice(t,r) } }
+  else if(SY.cfg) sync();
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") sync() });
+  setInterval(()=>{ if(document.visibilityState==="visible"&&SY.cfg&&!SY.busy) sync() },120000);
+}
+function history_replace(){ window.history.replaceState(null,"",location.pathname) }
 setInterval(()=>{ if(keyOf(new Date())!==TODAY) location.reload(); else { renderTimeline(); renderNews() } },60000);
 
 if(window.claude && window.claude.use){
