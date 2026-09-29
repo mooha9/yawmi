@@ -337,6 +337,7 @@ header.top.past .dn-label{border-color:var(--now)}
 .az-row .c.done{color:var(--accent)}
 .az-row .b{grid-column:1/-1;height:4px;border-radius:4px;background:var(--sunk);overflow:hidden}
 .az-row .b i{display:block;height:100%;background:var(--gold)}
+.chev{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;display:block;margin:auto}
 .toast{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom,0px));inset-inline:16px;max-width:420px;margin-inline:auto;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;text-align:center;z-index:9;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
 .toast.show{opacity:1;transform:none}
 .sync{font-size:11.5px;color:var(--faint);text-align:center}
@@ -353,15 +354,15 @@ header.top.past .dn-label{border-color:var(--now)}
   </div>
   <div class="progress-line" aria-hidden="true"><i id="dayBar" style="width:0"></i></div>
   <div class="datenav" id="dateNav" hidden>
-    <button class="dn-arrow" id="dnPrev" aria-label="اليوم السابق">›</button>
+    <button class="dn-arrow" id="dnPrev" aria-label="اليوم السابق"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     <button class="dn-label" id="dnLabel" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="dnText"></span></button>
-    <button class="dn-arrow" id="dnNext" aria-label="اليوم التالي">‹</button>
+    <button class="dn-arrow" id="dnNext" aria-label="اليوم التالي"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
     <button class="dn-today" id="dnToday" hidden>العودة لليوم</button>
   </div>
 </header>
 <div class="calmodal" id="calModal" hidden role="dialog" aria-modal="true" aria-labelledby="cmTitle">
   <div class="cm-box">
-    <div class="cal-head"><button id="cmPrev" aria-label="الشهر السابق">›</button><h2 id="cmTitle" style="font-size:16px"></h2><button id="cmNext" aria-label="الشهر التالي">‹</button></div>
+    <div class="cal-head"><button id="cmPrev" aria-label="الشهر السابق"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button><h2 id="cmTitle" style="font-size:16px"></h2><button id="cmNext" aria-label="الشهر التالي"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
     <div class="cal cm-cal" id="cmCal"></div>
     <div class="jr-day-sum"><span>لون اليوم = نسبة الإنجاز</span></div>
     <div class="row" style="justify-content:space-between"><button class="btn" id="cmToday">اليوم</button><button class="btn ghost" id="cmClose">إغلاق</button></div>
@@ -578,7 +579,7 @@ header.top.past .dn-label{border-color:var(--now)}
     </div>
   </div>
   <div class="card">
-    <div class="cal-head"><button id="calPrev" aria-label="الشهر السابق">›</button><h2 id="calTitle" style="font-size:16px"></h2><button id="calNext" aria-label="الشهر التالي">‹</button></div>
+    <div class="cal-head"><button id="calPrev" aria-label="الشهر السابق"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button><h2 id="calTitle" style="font-size:16px"></h2><button id="calNext" aria-label="الشهر التالي"><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
     <div class="cal" id="cal"></div>
     <div class="jr-day-sum"><span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent)"></i> نص</span><span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold)"></i> صورة</span><span class="num" id="jrTotal"></span></div>
     <div class="field"><label for="jrSearch">ابحث في تدويناتك</label><input type="text" id="jrSearch" placeholder="كلمة أو اسم أو فكرة"></div>
@@ -658,7 +659,7 @@ const TODAY = keyOf(new Date());
    التخزين المحلي مفصول بين البيئتين لأنهما على النطاق نفسه. */
 const ENV=(window.YAWMI&&window.YAWMI.env)||"production";
 const NS=ENV==="staging"?"-staging":"";
-const FLAGS={dateNav:false, dashboard:false, adhkar:false, weekSat:false, weekDays:false, journalHabit:false};
+const FLAGS={dateNav:false, dashboard:false, adhkar:false, weekSat:false, weekDays:false, journalHabit:false, fastWeek:false};
 const FEAT=f=>ENV==="staging"||FLAGS[f]===true;
 /* اليوم المعروض: كل ما يخص «اليوم» يُقرأ ويُكتب على VIEW، ويبقى TODAY هو التاريخ الفعلي */
 let VIEW=TODAY;
@@ -773,7 +774,7 @@ function schedule(){
       if(tm.ok) out.push({t:m.isha+15, id:"fastTomorrow", ttl:"غداً صيام "+fastLabel(tm), sub:"انوِ الصيام واضبط منبّه السحور", done:!!day.fastReminded});
       return out })(),
     {t:m.isha+60, id:"journal", ttl:"التدوين اليومي", sub:"نص أو صورة صفحة من دفترك", done:hasEntry(day), go:FEAT("journalHabit")?"habits":"progress"},
-    ...(FEAT("adhkar")?[{t:m.asr+45, id:"adhkar", ttl:"أذكار المئة", sub:"سبعة أذكار، كل ذكر ١٠٠ مرة", done:azTotal(day)>=700, go:"habits", progress:`${AR(Math.round(azTotal(day)/7))}٪`}]:[]),
+    ...(FEAT("adhkar")?[{t:m.asr+45, id:"adhkar", ttl:"أذكار المئة", sub:`${ADHKAR.length===3?"ثلاثة أذكار":AR(ADHKAR.length)+" أذكار"}، كل ذكر ١٠٠ مرة`, done:azTotal(day)>=ADHKAR.length*100, go:"habits", progress:`${AR(Math.round(azTotal(day)/ADHKAR.length))}٪`}]:[]),
     {t:m.isha+45, id:"speaking", ttl:"تحدّي الجرأة", sub:"راجع هل نفّذته اليوم", done:day.speaking, go:"speak"},
   ].sort((a,b)=>a.t-b.t);
   return {items, p:m, us};
@@ -1049,11 +1050,7 @@ function renderDash(){
 
 /* ---------- أذكار المئة ---------- */
 const ADHKAR=[
-  {k:"tasbih", t:"سُبْحَانَ اللهِ", v:"«أيعجز أحدكم أن يكسب كل يوم ألف حسنة؟ يسبّح مائة تسبيحة، فيُكتب له ألف حسنة، أو يُحطّ عنه ألف خطيئة». رواه مسلم"},
-  {k:"tahmid", t:"الْحَمْدُ للهِ", v:"«والحمد لله تملأ الميزان». رواه مسلم"},
-  {k:"tahlil", t:"لَا إِلَهَ إِلَّا اللهُ", v:"«أفضل الذكر لا إله إلا الله». رواه الترمذي وحسّنه"},
-  {k:"takbir", t:"اللهُ أَكْبَرُ", v:"«أحبّ الكلام إلى الله أربع: سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر». رواه مسلم"},
-  {k:"hawqala", t:"لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ", v:"«لا حول ولا قوة إلا بالله كنزٌ من كنوز الجنة». متفق عليه"},
+  {k:"baqiyat", t:"سُبْحَانَ اللهِ، وَالْحَمْدُ للهِ، وَلَا إِلَهَ إِلَّا اللهُ، وَاللهُ أَكْبَرُ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ", v:"«لأن أقول: سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر، أحبُّ إليّ مما طلعت عليه الشمس». رواه مسلم. و«لا حول ولا قوة إلا بالله كنزٌ من كنوز الجنة». متفق عليه"},
   {k:"istighfar", t:"أَسْتَغْفِرُ اللهَ", v:"«إنه ليُغان على قلبي، وإني لأستغفر الله في اليوم مائة مرة». رواه مسلم"},
   {k:"tawhid", t:"لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", v:"من قالها في يوم مائة مرة «كانت له عدل عشر رقاب، وكُتبت له مائة حسنة، ومُحيت عنه مائة سيئة، وكانت له حرزاً من الشيطان يومه ذلك حتى يُمسي». متفق عليه"}
 ];
@@ -1066,7 +1063,7 @@ function renderAdhkar(){
   const a=ADHKAR.find(x=>x.k===azCur), n=azOf(a.k);
   $("azTxt").textContent=a.t; $("azN").textContent=`${AR(n)} / ١٠٠`; $("azBarF").style.width=Math.min(100,n)+"%";
   $("azBig").classList.toggle("full",n>=100); $("azVirtue").textContent=a.v;
-  $("azTotal").textContent=`${AR(azTotal(day))} من ٧٠٠`;
+  $("azTotal").textContent=`${AR(azTotal(day))} من ${AR(ADHKAR.length*100)}`;
   const list=$("azList"); list.textContent="";
   ADHKAR.forEach(x=>{ const c=Math.min(100,azOf(x.k)), r=el("button","az-row"); r.setAttribute("aria-current",x.k===azCur);
     const t=el("span","t",x.t.replace(/[ً-ْ]/g,"")); const cc=el("span","c num"+(c>=100?" done":""),c>=100?"تمّ ١٠٠":`${AR(c)}/١٠٠`); const b=el("span","b"); const i=el("i"); i.style.width=c+"%"; b.append(i);
@@ -1091,9 +1088,10 @@ function renderFast(){
     else { $("fastNoteT").textContent="رمضان مبارك"; $("fastNoteS").textContent="صيام الفريضة. السحور قبل الفجر والإفطار مع المغرب." }
   } else note.hidden=true;
   $("c-fast").setAttribute("aria-pressed",!!day.fast);
-  $("fastToday").textContent=f.ok?"اليوم صيام "+fastLabel(f)+". سجّل عند الإفطار.":f.forbidden?"اليوم يحرم صيامه (عيد أو أيام التشريق).":f.ramadan?"شهر رمضان: صيام الفريضة.":tm.ok?"لا صيام اليوم، وغداً صيام "+fastLabel(tm)+".":"لا صيام اليوم. هذه أيامك القادمة:";
+  $("fastToday").textContent=f.ok?"اليوم صيام "+fastLabel(f)+". سجّل عند الإفطار.":f.forbidden?"اليوم يحرم صيامه (عيد أو أيام التشريق).":f.ramadan?"شهر رمضان: صيام الفريضة.":tm.ok?"لا صيام اليوم، وغداً صيام "+fastLabel(tm)+".":FEAT("fastWeek")?"لا صيام اليوم. أيام الصيام في الأسبوع القادم:":"لا صيام اليوم. هذه أيامك القادمة:";
   const box=$("fastList"); box.textContent=""; let n=0;
-  for(let i=1;i<=31&&n<6;i++){ const d=addDays(now,i), fi=fastInfo(d); if(!fi.ok) continue; n++;
+  const horizon=FEAT("fastWeek")?7:31, cap=FEAT("fastWeek")?7:6;
+  for(let i=1;i<=horizon&&n<cap;i++){ const d=addDays(now,i), fi=fastInfo(d); if(!fi.ok) continue; n++;
     const r=el("div","fast-row"), a=el("div"); a.append(el("div",null,new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-arab",{weekday:"long",day:"numeric",month:"long"}).format(d)), el("div","why",fi.why.join(" · ")));
     const rem=i===1?"التذكير الليلة":"التذكير "+new Intl.DateTimeFormat("ar-SA-u-nu-arab",{weekday:"long"}).format(addDays(d,-1))+" بعد العشاء";
     r.append(a, el("div","when",rem)); box.append(r) }
@@ -1354,7 +1352,7 @@ $("calNext").onclick=()=>{ calMonth=new Date(calMonth.getFullYear(),calMonth.get
 $("jrSearch").oninput=renderSearch;
 
 /* ---------- التقدم ---------- */
-const HABITS_ALL=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["كاليسثنكس / مشي",d=>d.exercise?1:(d.sets&&Object.values(d.sets).some(Boolean))?.5:0],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking],["الصيام",d=>{ if(!d.date) return null; const [y,mo,da]=d.date.split("-").map(Number); return fastInfo(new Date(y,mo-1,da)).ok?(d.fast?1:0):null }],["الضحى",d=>+!!d.duha],["الوتر",d=>+!!d.witr],["التدوين",d=>hasEntry(d)?1:0],["الأذكار",d=>{ const t=azTotal(d); return t>=700?1:t?.5:0 }],["العلامة الشخصية",d=>{const n=Object.values(d.brand||{}).filter(Boolean).length;return n>=4?1:n?.5:0}]];
+const HABITS_ALL=[["الورد ×٣٠",d=>d.quran>=30?1:d.quran>0?.5:0],["الصلوات بالمسجد",d=>{const n=PRAYERS.filter(([k])=>d.prayers&&d.prayers[k]).length;return n===5?1:n?.5:0}],["صفحة كتاب",d=>+!!d.book],["كاليسثنكس / مشي",d=>d.exercise?1:(d.sets&&Object.values(d.sets).some(Boolean))?.5:0],["الأسواق",d=>{const m=d.markets||{};const n=["sa","us","crypto"].filter(k=>m[k]).length;return n===3?1:n?.5:0}],["جديد الذكاء",d=>+!!d.ainews],["فكرة للمجتمع",d=>+!!d.aiidea],["الإنجليزية",d=>+!!d.english],["تحدّي الجرأة",d=>+!!d.speaking],["الصيام",d=>{ if(!d.date) return null; const [y,mo,da]=d.date.split("-").map(Number); return fastInfo(new Date(y,mo-1,da)).ok?(d.fast?1:0):null }],["الضحى",d=>+!!d.duha],["الوتر",d=>+!!d.witr],["التدوين",d=>hasEntry(d)?1:0],["الأذكار",d=>{ const t=azTotal(d); return t>=ADHKAR.length*100?1:t?.5:0 }],["العلامة الشخصية",d=>{const n=Object.values(d.brand||{}).filter(Boolean).length;return n>=4?1:n?.5:0}]];
 const HABITS=HABITS_ALL.filter(([n])=>n!=="الأذكار"||FEAT("adhkar"));
 function score(d){ if(!d) return 0; const v=HABITS.map(([,f])=>f(d)).filter(x=>x!=null); return v.reduce((a,b)=>a+b,0)/v.length }
 /* أسبوع السبت→الجمعة الذي يقع فيه اليوم المعروض (والعرض من اليمين لليسار لأن الصفحة RTL) */
