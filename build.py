@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """يبني نسخة مستقلة من قصاصة الـArtifact في src/app.html، مع الملخص والأيقونات والـmanifest."""
-import pathlib, re, json, shutil, zlib, struct, math
+import pathlib, re, json, shutil, zlib, struct, math, argparse
 
 ROOT = pathlib.Path(__file__).parent
-PUB = ROOT / "public"; PUB.mkdir(exist_ok=True)
+ap = argparse.ArgumentParser(); ap.add_argument("--env", default="production", choices=["production","staging"]); ap.add_argument("--out", default=str(ROOT / "public"))
+ARGS = ap.parse_args(); ENV = ARGS.env
+PUB = pathlib.Path(ARGS.out); PUB.mkdir(parents=True, exist_ok=True)
 frag = (ROOT / "src/app.html").read_text(encoding="utf-8")
 
-title = re.search(r"<title>(.*?)</title>", frag).group(1)
+title = re.search(r"<title>(.*?)</title>", frag).group(1) + (" · تجريبي" if ENV=="staging" else "")
 fonts = re.findall(r'<link rel="(?:preconnect|stylesheet)"[^>]*>', frag)
 style = re.search(r"<style>.*?</style>", frag, re.S).group(0)
 body  = frag[frag.index('<header class="top">'):]
@@ -32,6 +34,7 @@ html = f"""<!DOCTYPE html>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
+<script>window.YAWMI={{env:"{ENV}"}}</script>
 <style>:root{{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}body{{margin:0}}[hidden]{{display:none!important}}img{{max-width:100%}}</style>
 {chr(10).join(fonts)}
 {style}

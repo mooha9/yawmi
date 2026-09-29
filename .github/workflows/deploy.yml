@@ -1,13 +1,13 @@
-name: نشر يومي إلى GitHub Pages
+name: نشر يومي إلى GitHub Pages (الإنتاج + التجربة)
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
-concurrency: { group: pages, cancel-in-progress: true }
+concurrency: { group: pages, cancel-in-progress: false }
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,12 +15,25 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - name: الإنتاج (main)
+        uses: actions/checkout@v4
+        with: { ref: main, path: main }
+      - name: التجربة (staging)
+        id: stg
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with: { ref: staging, path: stg }
       - name: التحقق من ملف الأخبار
-        run: python3 -c "import json;d=json.load(open('src/news.json'));assert d['date'] and d['markets'] and d['ai']['items'];print('news.json ok', d['date'])"
+        run: python3 -c "import json;d=json.load(open('main/src/news.json'));assert d['date'] and d['markets'] and d['ai']['items'];print('news.json ok', d['date'])"
       - name: البناء
-        run: python3 build.py && touch public/.nojekyll
+        run: |
+          python3 main/build.py --env production --out site
+          if [ -f stg/build.py ]; then
+            cp main/src/news.json stg/src/news.json   # الأخبار تُكتب على main فقط؛ التجربة تعرض نفسها
+            python3 stg/build.py --env staging --out site/staging
+          fi
+          touch site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
-        with: { path: public }
+        with: { path: site }
       - id: deployment
         uses: actions/deploy-pages@v4

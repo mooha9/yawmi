@@ -1,7 +1,13 @@
 # يومي
 
 تطبيق جدول يومي حول أوقات الصلاة. المصدر `src/app.html` (قصاصة Artifact)، و`build.py` يبني `public/`.
-أي دفع إلى `main` ينشر الموقع على https://mooha9.github.io/yawmi/ عبر GitHub Actions (GitHub Pages). نسخة Netlify القديمة متوقفة لأن رصيد الحساب نفد.
+## البيئتان
+- **الإنتاج:** فرع `main`، وينشر على https://mooha9.github.io/yawmi/، وبيانات المزامنة في `mooha9/yawmi-data`.
+- **التجربة:** فرع `staging`، وينشر على https://mooha9.github.io/yawmi/staging/، وبيانات المزامنة في `mooha9/yawmi-data-staging`. تخزينها المحلي مفصول بلاحقة `-staging`.
+- أي دفع إلى أحد الفرعين يعيد بناء الاثنين معاً (`.github/workflows/deploy.yml`). والأخبار تُكتب على `main` فقط، وتُنسخ إلى التجربة عند البناء.
+- **الرايات:** كائن `FLAGS` في `src/app.html`. الميزة الجديدة تُطوَّر على `staging` وتكون ظاهرة هناك دائماً. تُدمج إلى `main` وقيمتها في `FLAGS` غير true، فتبقى مخفية في الإنتاج. تُفعَّل في الإنتاج بجعلها true بعد أن يوافق المستخدم.
+- لا تختبر على بيانات الإنتاج أبداً.
+- نسخة Netlify القديمة متوقفة، لأن رصيد الحساب نفد.
 
 ## ملخص الأخبار: `src/news.json`
 - حافظ على البنية بالضبط: `date` (YYYY-MM-DD بتوقيت الرياض)، و`label`، و`markets` (بالترتيب sa ثم us ثم crypto، وكل عنصر فيه k وname وheadline وfigures وpoints وwatch وsources)، و`ai` (فيه headline وitems من أزواج [وسم، جملة] وforYou وsources).
