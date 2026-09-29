@@ -690,7 +690,7 @@ const TODAY = keyOf(new Date());
    التخزين المحلي مفصول بين البيئتين لأنهما على النطاق نفسه. */
 const ENV=(window.YAWMI&&window.YAWMI.env)||"production";
 const NS=ENV==="staging"?"-staging":"";
-const FLAGS={dateNav:false, dashboard:false, adhkar:false, weekSat:false, weekDays:false, journalHabit:false, fastWeek:false, followTab:false, globalSearch:false, syncCompact:false};
+const FLAGS={dateNav:true, dashboard:true, adhkar:true, weekSat:true, weekDays:true, journalHabit:true, fastWeek:true, followTab:true, globalSearch:true, syncCompact:true};
 const FEAT=f=>ENV==="staging"||FLAGS[f]===true;
 /* اليوم المعروض: كل ما يخص «اليوم» يُقرأ ويُكتب على VIEW، ويبقى TODAY هو التاريخ الفعلي */
 let VIEW=TODAY;
